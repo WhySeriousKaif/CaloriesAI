@@ -1,7 +1,8 @@
+import { useAuth } from '@clerk/expo';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { SymbolView } from 'expo-symbols';
+import { ArrowRight } from 'lucide-react-native';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,6 +14,11 @@ import { Welcome } from '@/constants/welcome';
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter()
+  const { isLoaded, isSignedIn } = useAuth();
+
+  // Returning users with a cached session skip the welcome screen entirely.
+  if (!isLoaded) return null;
+  if (isSignedIn) return <Redirect href="/(tabs)" />;
 
   return (
     <View style={styles.screen}>
@@ -62,17 +68,14 @@ export default function WelcomeScreen() {
           <Pressable
             style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
             accessibilityRole="button"
-            onPress={() => router.push('/(tabs)')}>
+            onPress={() => router.push('/onboarding')}>
             <View style={styles.ctaLabelBox}>
               <Text style={styles.ctaLabel}>Get Started</Text>
             </View>
-            <SymbolView
-              name="arrow.right"
-              tintColor={Welcome.onBrand}
+            <ArrowRight
+              color={Welcome.onBrand}
               size={Welcome.arrowSize}
-              weight="semibold"
-              style={styles.ctaArrow}
-              fallback={<Text style={styles.ctaArrowFallback}>→</Text>}
+              strokeWidth={2.5}
             />
           </Pressable>
 
@@ -81,7 +84,7 @@ export default function WelcomeScreen() {
             <Text
               style={styles.footerLink}
               accessibilityRole="link"
-              onPress={() => router.push('/(tabs)')}>
+              onPress={() => router.push('/(auth)/sign-in')}>
               Sign In
             </Text>
           </Text>

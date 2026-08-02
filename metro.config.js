@@ -1,7 +1,6 @@
 const { getDefaultConfig } = require('expo/metro-config');
-const { withNativewind } = require('nativewind/metro');
+const { withNativeWind } = require('nativewind/metro');
 
-// `withNativewind` defaults to globalClassNamePolyfill: true, which is what lets
-// `className` work on plain react-native primitives, and generates
-// nativewind-env.d.ts for the className prop types.
-module.exports = withNativewind(getDefaultConfig(__dirname));
+// NativeWind v4 compiles `input` with the Tailwind CLI and injects the result
+// into the bundle, so the CSS entry has to be named here as well as imported.
+module.exports = withNativeWind(getDefaultConfig(__dirname), { input: './src/global.css' });
