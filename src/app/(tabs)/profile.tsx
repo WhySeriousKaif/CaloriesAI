@@ -11,9 +11,10 @@ import {
   Scale,
   Salad,
   Target,
+  Trash2,
   User as UserIcon,
 } from 'lucide-react-native';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -33,18 +34,11 @@ function titleCase(value: string | null | undefined, fallback = '—') {
   return value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, ' ');
 }
 
-/**
- * Profile — identity from Clerk, body stats and targets from Neon.
- *
- * Read-only by design. Editing stats requires `PATCH /api/profile` plus the
- * `generate-plan` task to recompute targets, both of which are PLAN.md Phase 6.
- * The rows are styled as pressable so the affordance is already in place.
- */
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useUser();
-  const { signOut } = useAuth();
+  const { signOut, getToken } = useAuth();
   const { profile, loading } = useProfile();
 
   const heightCm = toNumber(profile?.heightCm);
@@ -69,6 +63,36 @@ export default function ProfileScreen() {
     } catch (err) {
       console.error('[profile] Sign out error:', err);
     }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete account?',
+      'This will permanently delete your account, your profile data, and all logged meals. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const token = await getToken();
+              if (token) {
+                await fetch('/api/profile', {
+                  method: 'DELETE',
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+              }
+              await signOut().catch(() => {});
+              router.replace('/(auth)/sign-in');
+            } catch (err) {
+              console.error('[profile] Account deletion failed:', err);
+              Alert.alert('Error', 'Could not delete account. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -149,8 +173,16 @@ export default function ProfileScreen() {
           onPress={handleSignOut}
           accessibilityRole="button"
           style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}>
-          <LogOut size={18} color={Palette.danger} strokeWidth={2.2} />
+          <LogOut size={18} color={Palette.textSecondary} strokeWidth={2.2} />
           <Text style={styles.signOutText}>Sign out</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={handleDeleteAccount}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}>
+          <Trash2 size={18} color={Palette.danger} strokeWidth={2.2} />
+          <Text style={styles.deleteText}>Delete account</Text>
         </Pressable>
       </ScrollView>
     </View>
@@ -372,12 +404,30 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: Radius.pill,
     backgroundColor: Palette.card,
-    borderWidth: 1.5,
-    borderColor: Palette.dangerTint,
+    borderWidth: 1,
+    borderColor: Palette.border,
     marginTop: 10,
     ...CardShadow,
   },
   signOutText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Palette.text,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 54,
+    borderRadius: Radius.pill,
+    backgroundColor: Palette.card,
+    borderWidth: 1.5,
+    borderColor: Palette.dangerTint,
+    marginTop: 8,
+    ...CardShadow,
+  },
+  deleteText: {
     fontSize: 16,
     fontWeight: '700',
     color: Palette.danger,

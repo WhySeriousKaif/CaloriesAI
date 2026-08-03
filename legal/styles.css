@@ -1,0 +1,340 @@
+/* CalorieAI Legal & Landing Page Design System */
+:root {
+  --bg-color: #FAF9F6;
+  --brand: #1A5D42;
+  --brand-deep: #12452F;
+  --brand-tint: #E4EFE8;
+  --on-brand: #FFFFFF;
+  --card-bg: #FFFFFF;
+  --border-color: #EFEFE9;
+  --text-main: #1A1A1A;
+  --text-muted: #6E6E73;
+  --text-light: #8A8A8A;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --max-width: 960px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--brand);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--brand-deep);
+}
+
+/* Navbar */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: rgba(250, 249, 246, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.nav-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--brand);
+  letter-spacing: -0.5px;
+}
+
+.logo-badge {
+  width: 34px;
+  height: 34px;
+  background-color: var(--brand);
+  color: #fff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--brand);
+}
+
+.btn-primary {
+  background-color: var(--brand);
+  color: var(--on-brand) !important;
+  padding: 10px 20px;
+  border-radius: var(--radius-pill);
+  font-weight: 700 !important;
+  font-size: 14px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-deep);
+  transform: translateY(-1px);
+}
+
+/* Page Layout */
+.main-content {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* Hero Section */
+.hero {
+  text-align: center;
+  padding: 40px 0 60px;
+}
+
+.badge {
+  display: inline-block;
+  background-color: var(--brand-tint);
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  margin-bottom: 16px;
+  color: var(--text-main);
+  line-height: 1.15;
+}
+
+.hero p {
+  font-size: 18px;
+  color: var(--text-muted);
+  max-width: 620px;
+  margin: 0 auto 32px;
+}
+
+/* Feature Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 60px;
+}
+
+.feature-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  background-color: var(--brand-tint);
+  color: var(--brand);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.feature-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-main);
+}
+
+.feature-card p {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* Legal Content Card */
+.legal-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 48px;
+  box-shadow: var(--shadow);
+}
+
+.legal-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+}
+
+.legal-header h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  margin-bottom: 8px;
+}
+
+.legal-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 16px;
+}
+
+.legal-body section {
+  margin-bottom: 32px;
+}
+
+.legal-body h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--brand);
+  margin-bottom: 12px;
+  letter-spacing: -0.3px;
+}
+
+.legal-body h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 16px 0 8px;
+}
+
+.legal-body p {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  line-height: 1.65;
+}
+
+.legal-body ul, .legal-body ol {
+  margin: 0 0 16px 24px;
+  color: var(--text-muted);
+}
+
+.legal-body li {
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.callout-box {
+  background-color: var(--brand-tint);
+  border-left: 4px solid var(--brand);
+  padding: 16px 20px;
+  border-radius: var(--radius-sm);
+  margin: 20px 0;
+  font-size: 14px;
+  color: var(--brand-deep);
+}
+
+/* Footer */
+.footer {
+  background-color: #FFFFFF;
+  border-top: 1px solid var(--border-color);
+  padding: 40px 24px;
+}
+
+.footer-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.footer-brand {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
+
+.footer-links a {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.footer-copy {
+  font-size: 13px;
+  color: var(--text-light);
+  width: 100%;
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 640px) {
+  .hero h1 {
+    font-size: 32px;
+  }
+  .legal-card {
+    padding: 24px;
+  }
+  .nav-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+}

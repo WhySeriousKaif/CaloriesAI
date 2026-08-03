@@ -1,4 +1,5 @@
 import { logger, task } from "@trigger.dev/sdk";
+import { sql } from "drizzle-orm";
 
 import { db } from "../db";
 import { users } from "../db/schema";
@@ -29,9 +30,10 @@ export const clerkUserCreated = task({
       .values({ clerkUserId: data.id, email })
       .onConflictDoUpdate({
         target: users.clerkUserId,
-        // The row already existed (profile POST won the race). Only refresh what
-        // Clerk owns — never clobber onboarding answers or the generated plan.
-        set: { email, updatedAt: new Date() },
+        set: {
+          email: sql`coalesce(${email}, ${users.email})`,
+          updatedAt: new Date(),
+        },
       })
       .returning({ id: users.id, clerkUserId: users.clerkUserId });
 

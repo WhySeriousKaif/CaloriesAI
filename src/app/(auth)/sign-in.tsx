@@ -66,47 +66,27 @@ export default function SignInScreen() {
       setError(null);
 
       try {
-        const redirectUrl = AuthSession.makeRedirectUri({ path: 'sso-callback' });
-
-        if (Platform.OS === 'web') {
-          if (!clerk?.client) {
-            setError('Authentication service is loading. Please try again.');
-            setPending(null);
-            return;
-          }
-
-          await clerk.client.signIn.create({
-            strategy: STRATEGY[provider],
-            redirectUrl,
-          });
-
-          const externalUrl =
-            clerk.client.signIn.firstFactorVerification?.externalVerificationRedirectURL;
-          if (externalUrl) {
-            window.location.href = externalUrl.toString();
-            return;
-          }
-        } else {
-          const { createdSessionId, setActive, signUp } = await startSSOFlow({
-            strategy: STRATEGY[provider],
-            redirectUrl,
-          });
-
-          if (createdSessionId && setActive) {
-            await setActive({ session: createdSessionId });
-            router.replace('/(tabs)');
-            return;
-          }
-
-          if (signUp?.status === 'missing_requirements') {
-            setError(
-              'We need a little more information to finish creating your account.'
-            );
-            return;
-          }
+        if (isSignedIn) {
+          router.replace('/(tabs)');
+          return;
         }
 
-        // No session and no missing requirements means the user backed out.
+        const { createdSessionId, setActive, signUp } = await startSSOFlow({
+          strategy: STRATEGY[provider],
+        });
+
+        if (createdSessionId && setActive) {
+          await setActive({ session: createdSessionId });
+          router.replace('/(tabs)');
+          return;
+        }
+
+        if (signUp?.status === 'missing_requirements') {
+          setError(
+            'We need a little more information to finish creating your account.'
+          );
+          return;
+        }
       } catch (err: any) {
         console.error('SSO error:', JSON.stringify(err, null, 2));
         const clerkMessage =
@@ -119,7 +99,7 @@ export default function SignInScreen() {
         setPending(null);
       }
     },
-    [pending, clerk, startSSOFlow, router]
+    [pending, isSignedIn, startSSOFlow, router]
   );
 
   const appleButton = (

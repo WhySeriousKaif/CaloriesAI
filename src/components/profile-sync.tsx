@@ -22,18 +22,22 @@ export function ProfileSync() {
   useEffect(() => {
     if (!isLoaded || !isSignedIn || inFlight.current) return;
 
-    inFlight.current = true;
+    let syncAttempted = false;
 
     (async () => {
       try {
         const answers = await readPendingOnboarding();
         if (!answers) return; // Returning user — nothing to sync.
 
-        const token = await getToken();
-        if (!token) return;
+        inFlight.current = true;
+        syncAttempted = true;
 
-        // Relative URLs resolve against the Expo dev server in development and
-        // against the `origin` configured for expo-router in production.
+        const token = await getToken();
+        if (!token) {
+          console.warn('[profile-sync] Session token not available yet, will retry.');
+          return;
+        }
+
         const response = await fetch('/api/profile', {
           method: 'POST',
           headers: {
@@ -44,7 +48,6 @@ export function ProfileSync() {
         });
 
         if (!response.ok) {
-          // Keep the answers so the next launch retries.
           console.error(
             '[profile-sync] Failed to save profile:',
             response.status,
@@ -54,10 +57,13 @@ export function ProfileSync() {
         }
 
         await clearPendingOnboarding();
+        console.log('[profile-sync] Onboarding profile successfully synced to Neon DB.');
       } catch (error) {
         console.error('[profile-sync] Sync failed:', error);
       } finally {
-        inFlight.current = false;
+        if (syncAttempted) {
+          inFlight.current = false;
+        }
       }
     })();
   }, [isLoaded, isSignedIn, getToken]);

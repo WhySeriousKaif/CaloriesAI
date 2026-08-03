@@ -79,7 +79,7 @@ export default function WelcomeScreen() {
           <Text
             style={styles.footerLink}
             accessibilityRole="link"
-            onPress={() => router.push('/(auth)/sign-in')}>
+            onPress={() => router.push(isSignedIn ? '/(tabs)' : '/(auth)/sign-in')}>
             Sign In
           </Text>
         </Text>

@@ -49,23 +49,28 @@ export function useProfile() {
 
     try {
       const token = await getToken();
-      if (!token) throw new Error('No session token');
+      if (!token) return;
 
       const response = await fetch('/api/profile', {
         headers: { Authorization: `Bearer ${token}` },
+      }).catch((err) => {
+        console.warn('[use-profile] Network fetch exception:', err);
+        return null;
       });
+
+      if (!response) return;
 
       if (response.status === 404) {
         setProfile(null);
         return;
       }
 
-      if (!response.ok) throw new Error(`Request failed (${response.status})`);
+      if (!response.ok) return;
 
-      const data = (await response.json()) as { profile: Profile };
-      setProfile(data.profile);
+      const data = (await response.json().catch(() => null)) as { profile: Profile | null } | null;
+      if (data) setProfile(data.profile ?? null);
     } catch (err) {
-      console.error('[use-profile] Failed to load profile:', err);
+      console.warn('[use-profile] Failed to load profile:', err);
       setError(err instanceof Error ? err.message : 'Failed to load profile');
     } finally {
       setLoading(false);
@@ -85,23 +90,37 @@ export function useProfile() {
 
       try {
         const token = await getToken();
-        if (!token || isCancelled) return;
+        if (!token || isCancelled) {
+          if (!isCancelled) setLoading(false);
+          return;
+        }
 
         const response = await fetch('/api/profile', {
           headers: { Authorization: `Bearer ${token}` },
+        }).catch((err) => {
+          console.warn('[use-profile] Network fetch exception:', err);
+          return null;
         });
+
+        if (!response || isCancelled) {
+          if (!isCancelled) setLoading(false);
+          return;
+        }
 
         if (response.status === 404) {
           if (!isCancelled) setProfile(null);
           return;
         }
 
-        if (!response.ok) throw new Error(`Request failed (${response.status})`);
+        if (!response.ok) {
+          if (!isCancelled) setLoading(false);
+          return;
+        }
 
-        const data = (await response.json()) as { profile: Profile };
-        if (!isCancelled) setProfile(data.profile);
+        const data = (await response.json().catch(() => null)) as { profile: Profile | null } | null;
+        if (!isCancelled && data) setProfile(data.profile ?? null);
       } catch (err) {
-        console.error('[use-profile] Failed to load profile:', err);
+        console.warn('[use-profile] Failed to load profile:', err);
         if (!isCancelled) setError(err instanceof Error ? err.message : 'Failed to load profile');
       } finally {
         if (!isCancelled) setLoading(false);

@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import {
   AlertTriangle,
   ChevronRight,
@@ -13,40 +14,64 @@ import {
   Palette,
   Radius,
 } from '@/constants/design';
-import type { DemoMeal } from '@/lib/demo-meals';
+import type { MealItem } from '@/hooks/use-meals';
 
 type MealCardProps = {
-  meal: DemoMeal;
+  meal: MealItem | any;
   onPress?: () => void;
   onRetake?: () => void;
 };
 
 /**
  * A single row in Today's Meals. Renders one of three states straight from
- * `meal.status`, matching the `analyzing | completed | failed` lifecycle the
- * `meals` table stores.
+ * `meal.status`, matching the `analyzing | pending | completed | failed` lifecycle.
  */
 export function MealCard({ meal, onPress, onRetake }: MealCardProps) {
-  if (meal.status === 'analyzing') return <AnalyzingCard />;
-  if (meal.status === 'failed') return <FailedCard onRetake={onRetake} />;
+  if (meal.status === 'analyzing' || meal.status === 'pending') {
+    return <AnalyzingCard />;
+  }
+  if (meal.status === 'failed') {
+    return <FailedCard onRetake={onRetake} />;
+  }
 
-  const accent = Macro[meal.accent];
+  const accentKey = meal.accent && Macro[meal.accent as keyof typeof Macro] ? meal.accent : 'protein';
+  const accent = Macro[accentKey as keyof typeof Macro] ?? Macro.protein;
+
+  const formattedTime = meal.loggedAt
+    ? (() => {
+        try {
+          const d = new Date(meal.loggedAt);
+          return isNaN(d.getTime())
+            ? String(meal.loggedAt)
+            : d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        } catch {
+          return String(meal.loggedAt);
+        }
+      })()
+    : '';
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${meal.slot}, ${meal.name}, ${meal.calories} calories`}
+      accessibilityLabel={`${meal.name ?? 'Meal'}, ${meal.calories ?? 0} calories`}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
-      {/* Placeholder tile until ImageKit URLs exist (PLAN.md Phase 4). */}
-      <View style={[styles.thumb, { backgroundColor: accent.tint }]}>
-        <Salad size={26} color={accent.color} strokeWidth={1.8} />
-      </View>
+      {meal.imageUrl ? (
+        <Image
+          source={{ uri: meal.imageUrl }}
+          style={styles.thumbImage}
+          contentFit="cover"
+        />
+      ) : (
+        <View style={[styles.thumb, { backgroundColor: accent.tint }]}>
+          <Salad size={26} color={accent.color} strokeWidth={1.8} />
+        </View>
+      )}
 
       <View style={styles.middle}>
-        <Text style={styles.slot}>{meal.slot}</Text>
+        <Text style={styles.slot}>{meal.name || meal.slot || 'Logged Meal'}</Text>
         <Text style={styles.name} numberOfLines={1}>
-          {meal.name}
+          {meal.errorReason ? 'Failed to process' : 'AI Nutrition'}
         </Text>
 
         <View style={styles.macroRow}>
@@ -58,10 +83,10 @@ export function MealCard({ meal, onPress, onRetake }: MealCardProps) {
 
       <View style={styles.right}>
         <View style={styles.kcalRow}>
-          <Text style={styles.kcal}>{meal.calories}</Text>
+          <Text style={styles.kcal}>{meal.calories ?? 0}</Text>
           <Text style={styles.kcalUnit}> kcal</Text>
         </View>
-        <Text style={styles.time}>{meal.loggedAt}</Text>
+        <Text style={styles.time}>{formattedTime}</Text>
       </View>
 
       <ChevronRight size={18} color={Palette.textTertiary} strokeWidth={2} />
@@ -141,6 +166,11 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  thumbImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 18,
   },
   middle: {
     flex: 1,

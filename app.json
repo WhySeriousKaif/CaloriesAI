@@ -38,7 +38,8 @@
       ],
       "expo-secure-store",
       "expo-web-browser",
-      "@clerk/expo"
+      "@clerk/expo",
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true,

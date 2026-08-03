@@ -1,3 +1,4 @@
+import { useAuth } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import {
@@ -42,6 +43,8 @@ import { WeightHeader } from '@/components/onboarding/illustrations/WeightHeader
 import { OnboardingHeader } from '@/components/onboarding/OnboardingHeader';
 import { OptionCard } from '@/components/onboarding/OptionCard';
 import { RulerPicker } from '@/components/onboarding/RulerPicker';
+import { useProfile } from '@/hooks/use-profile';
+import { requestPlan } from '@/lib/api';
 import {
   deviceTimezone,
   savePendingOnboarding,
@@ -50,6 +53,15 @@ import {
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
+
+  // If user is signed in and already completed onboarding, redirect directly to dashboard
+  useEffect(() => {
+    if (isLoaded && isSignedIn && !profileLoading && profile?.onboardingCompletedAt) {
+      router.replace('/(tabs)');
+    }
+  }, [isLoaded, isSignedIn, profileLoading, profile, router]);
 
   // Current onboarding step (1 to 10)
   const [step, setStep] = useState(1);
@@ -235,10 +247,36 @@ export default function OnboardingScreen() {
   // Step 8: Simulated Loading Progress Timer
   useEffect(() => {
     if (step === 8) {
-      const timer = setTimeout(() => {
-        computePlanTargets();
-        setLoadingTextIndex(0);
-      }, 0);
+      void (async () => {
+        try {
+          const aiPlan = await requestPlan({
+            gender,
+            dateOfBirth: '1998-01-01',
+            heightCm,
+            weightKg,
+            goal,
+            targetWeightKg: goalWeightKg,
+            activityLevel: activityLevel as any,
+            paceKgPerWeek: 0.5,
+            dietPreference: dietPreference as any,
+          });
+
+          if (aiPlan?.calories) {
+            setCalculatedPlan({
+              calories: aiPlan.calories,
+              proteinG: aiPlan.protein,
+              carbsG: aiPlan.carbs,
+              fatG: aiPlan.fat,
+              bmi: currentBmi,
+            });
+          } else {
+            computePlanTargets();
+          }
+        } catch (err) {
+          console.warn('[onboarding] AI plan request failed, using formula fallback:', err);
+          computePlanTargets();
+        }
+      })();
 
       const interval = setInterval(() => {
         setLoadingTextIndex((prev) => {
@@ -252,7 +290,6 @@ export default function OnboardingScreen() {
       }, 700);
 
       return () => {
-        clearTimeout(timer);
         clearInterval(interval);
       };
     }

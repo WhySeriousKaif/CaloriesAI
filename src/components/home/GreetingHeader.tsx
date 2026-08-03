@@ -37,7 +37,7 @@ export function GreetingHeader() {
       />
 
       <View style={styles.topRow}>
-        <Logo variant="lockup" height={28} />
+        <Logo variant="mark" height={36} />
 
         <Pressable
           onPress={() => setShowStreak(true)}

@@ -23,3 +23,10 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
+/* Hide Expo Dev Menu floating launcher FAB on web preview */
+#expo-dev-menu-launcher,
+[id*="expo-dev-menu"],
+[class*="expo-dev-menu"] {
+  display: none !important;
+}

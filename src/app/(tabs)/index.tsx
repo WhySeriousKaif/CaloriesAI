@@ -19,7 +19,6 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { profile, loading: profileLoading } = useProfile();
-  const { meals, loading: mealsLoading } = useMeals();
 
   const days = useMemo(() => weekAround(new Date()), []);
   const todayKey = useMemo(
@@ -27,6 +26,7 @@ export default function HomeScreen() {
     [days]
   );
   const [selectedKey, setSelectedKey] = useState(todayKey);
+  const { meals, loading: mealsLoading } = useMeals(selectedKey);
 
   const consumed = useMemo(() => {
     return meals.reduce(

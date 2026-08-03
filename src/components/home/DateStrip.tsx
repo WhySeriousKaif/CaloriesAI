@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { NumeralFont, Palette, Radius } from '@/constants/design';
 
@@ -13,22 +13,21 @@ export type DayCell = {
 };
 
 /**
- * The seven days of the week containing `reference`, Sunday first.
- *
- * Built from the device's local calendar. The timezone-correct "which meals
- * belong to this local day" query is PLAN.md Phase 5 — this only drives the strip.
+ * Generates 14 past days + today + 2 future days for smooth scrolling.
  */
 export function weekAround(reference: Date): DayCell[] {
-  const startOfWeek = new Date(reference);
-  startOfWeek.setDate(reference.getDate() - reference.getDay());
-  startOfWeek.setHours(0, 0, 0, 0);
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  return Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(startOfWeek);
-    date.setDate(startOfWeek.getDate() + index);
+  const pastDaysCount = 14;
+  const futureDaysCount = 2;
+  const totalDays = pastDaysCount + 1 + futureDaysCount;
+
+  return Array.from({ length: totalDays }, (_, index) => {
+    const offset = index - pastDaysCount;
+    const date = new Date(reference);
+    date.setDate(reference.getDate() + offset);
+    date.setHours(0, 0, 0, 0);
 
     return {
       key: date.toISOString().slice(0, 10),
@@ -48,7 +47,11 @@ type DateStripProps = {
 
 export function DateStrip({ days, selectedKey, onSelect }: DateStripProps) {
   return (
-    <View style={styles.row}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContent}
+      style={styles.container}>
       {days.map((day) => {
         const selected = day.key === selectedKey;
 
@@ -81,7 +84,6 @@ export function DateStrip({ days, selectedKey, onSelect }: DateStripProps) {
               ]}>
               {day.dayOfMonth}
             </Text>
-            {/* The dot marks a day that has been logged; future days stay blank. */}
             <View
               style={[
                 styles.dot,
@@ -92,22 +94,26 @@ export function DateStrip({ days, selectedKey, onSelect }: DateStripProps) {
           </Pressable>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
+  container: {
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
+  },
+  scrollContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
     paddingVertical: 4,
+    paddingRight: 16,
   },
   cell: {
-    flex: 1,
+    width: 48,
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 6,
     borderRadius: 18,
     gap: 4,
   },

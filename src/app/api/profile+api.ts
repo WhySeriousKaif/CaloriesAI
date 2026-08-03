@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "../../../db";
 import { users } from "../../../db/schema";
+import { deleteUserImages } from "../../lib/imagekit";
 
 /**
  * `POST /api/profile` — persist the onboarding answers + OpenAI generated plan.
@@ -267,13 +268,47 @@ export async function GET(request: Request) {
       .where(eq(users.clerkUserId, clerkUserId))
       .limit(1);
 
-    if (!row) {
-      return Response.json({ error: "Profile not found" }, { status: 404 });
-    }
-
-    return Response.json({ profile: row });
+    return Response.json({ profile: row ?? null });
   } catch (error) {
     console.error("[profile] Read failed:", error);
     return Response.json({ error: "Failed to read profile" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  const clerkUserId = await requireUserId(request);
+  if (!clerkUserId) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const [userRow] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.clerkUserId, clerkUserId));
+
+    if (userRow) {
+      await deleteUserImages(userRow.id).catch((err) =>
+        console.warn("[profile] ImageKit cleanup warning:", err)
+      );
+    }
+
+    await db.delete(users).where(eq(users.clerkUserId, clerkUserId));
+
+    const secretKey = process.env.CLERK_SECRET_KEY;
+    if (secretKey) {
+      try {
+        const clerk = createClerkClient({ secretKey });
+        await clerk.users.deleteUser(clerkUserId);
+      } catch (clerkErr) {
+        console.warn("[profile] Clerk deleteUser warning:", clerkErr);
+      }
+    }
+
+    console.log(`[profile] Successfully deleted account for ${clerkUserId}`);
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    console.error("[profile] Delete failed:", error);
+    return Response.json({ error: "Failed to delete profile" }, { status: 500 });
   }
 }
