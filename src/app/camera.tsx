@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -39,6 +40,48 @@ type AnalyzedMeal = {
   status: string;
 };
 
+async function assetUriToBase64(uri: string, existingBase64?: string | null): Promise<string> {
+  if (existingBase64) {
+    return existingBase64.startsWith('data:')
+      ? existingBase64
+      : `data:image/jpeg;base64,${existingBase64}`;
+  }
+
+  const response = await fetch(uri);
+  const blob = await response.blob();
+
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+      } else {
+        reject(new Error('Failed to convert image to base64 string'));
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+const pickFileWeb = (): Promise<string | null> => {
+  return new Promise((resolve) => {
+    if (typeof document === 'undefined') return resolve(null);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e: any) => {
+      const file = e.target?.files?.[0];
+      if (!file) return resolve(null);
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  });
+};
+
 export default function CameraScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -52,17 +95,22 @@ export default function CameraScreen() {
   const [analyzedMeal, setAnalyzedMeal] = useState<AnalyzedMeal | null>(null);
   const [flash, setFlash] = useState<boolean>(false);
 
-  // Pick food photo from phone gallery
+  // Pick food photo from phone gallery or web file input
   const handlePickFromGallery = async () => {
     try {
+      if (Platform.OS === 'web') {
+        const base64 = await pickFileWeb();
+        if (base64) setCapturedImage(base64);
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
-        quality: 0.85,
-        base64: true,
+        quality: 0.5,
       });
 
-      if (!result.canceled && result.assets[0]?.base64) {
-        const base64 = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      if (!result.canceled && result.assets[0]?.uri) {
+        const base64 = await assetUriToBase64(result.assets[0].uri, result.assets[0].base64);
         setCapturedImage(base64);
       }
     } catch (err) {
@@ -73,20 +121,32 @@ export default function CameraScreen() {
 
   // Take photo with live camera
   const handleTakePhoto = async () => {
-    if (!cameraRef.current) return;
     try {
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.85,
-        base64: true,
-      });
+      if (cameraRef.current) {
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.5,
+          base64: true,
+        });
 
-      if (photo?.base64) {
-        const base64 = `data:image/jpeg;base64,${photo.base64}`;
-        setCapturedImage(base64);
+        if (photo?.uri || photo?.base64) {
+          const base64 = await assetUriToBase64(photo.uri, photo.base64);
+          setCapturedImage(base64);
+          return;
+        }
+      }
+
+      if (Platform.OS === 'web') {
+        const base64 = await pickFileWeb();
+        if (base64) setCapturedImage(base64);
       }
     } catch (err) {
       console.error('[camera] Capture error:', err);
-      Alert.alert('Camera Error', 'Failed to capture photo.');
+      if (Platform.OS === 'web') {
+        const base64 = await pickFileWeb();
+        if (base64) setCapturedImage(base64);
+      } else {
+        Alert.alert('Camera Error', 'Failed to capture photo.');
+      }
     }
   };
 
@@ -111,11 +171,18 @@ export default function CameraScreen() {
       });
 
       if (!response.ok) {
-        throw new Error(`Upload failed (${response.status})`);
+        const errJson = await response.json().catch(() => ({}));
+        const message = errJson.error || errJson.details || `Upload failed (${response.status})`;
+        throw new Error(message);
       }
 
-      const data = (await response.json()) as { meal: AnalyzedMeal };
-      let currentMeal = data.meal;
+      const data = await response.json();
+      let currentMeal: AnalyzedMeal = data.meal || data;
+
+      if (currentMeal && (currentMeal.status === 'completed' || currentMeal.status === 'failed')) {
+        setAnalyzedMeal(currentMeal);
+        return;
+      }
 
       // Poll until status is completed or failed
       let attempts = 0;
@@ -127,8 +194,9 @@ export default function CameraScreen() {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (checkRes.ok) {
-          const mealsData = (await checkRes.json()) as { meals: AnalyzedMeal[] };
-          const found = mealsData.meals.find((m) => m.id === currentMeal.id);
+          const raw = await checkRes.json();
+          const mealsArray: AnalyzedMeal[] = Array.isArray(raw) ? raw : raw.meals || [];
+          const found = mealsArray.find((m) => m.id === currentMeal.id);
           if (found) {
             currentMeal = found;
             if (found.status === 'completed' || found.status === 'failed') {
@@ -152,9 +220,9 @@ export default function CameraScreen() {
       }
 
       setAnalyzedMeal(currentMeal);
-    } catch (err) {
+    } catch (err: any) {
       console.error('[camera] Analysis error:', err);
-      Alert.alert('Analysis Failed', 'Could not analyze food photo. Please try again.');
+      Alert.alert('Analysis Failed', err?.message || 'Could not analyze food photo. Please try again.');
     } finally {
       setAnalyzing(false);
     }

@@ -28,7 +28,7 @@ type MealCardProps = {
  */
 export function MealCard({ meal, onPress, onRetake }: MealCardProps) {
   if (meal.status === 'analyzing' || meal.status === 'pending') {
-    return <AnalyzingCard />;
+    return null;
   }
   if (meal.status === 'failed') {
     return <FailedCard onRetake={onRetake} />;

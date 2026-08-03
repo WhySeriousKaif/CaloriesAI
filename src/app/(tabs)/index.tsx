@@ -28,14 +28,12 @@ export default function HomeScreen() {
     [days]
   );
   const [selectedKey, setSelectedKey] = useState(todayKey);
-  const { meals: allMeals, reload: reloadAll } = useMeals();
-  const { meals, loading: mealsLoading, reload: reloadSelected } = useMeals(selectedKey);
+  const { meals: allMeals, loading: mealsLoading, reload: reloadAll } = useMeals();
 
   useFocusEffect(
     useCallback(() => {
       void reloadAll();
-      void reloadSelected();
-    }, [reloadAll, reloadSelected])
+    }, [reloadAll])
   );
 
   const loggedDateKeys = useMemo(
@@ -46,6 +44,15 @@ export default function HomeScreen() {
           .map((m) => formatLocalDateKey(new Date(m.loggedAt)))
       ),
     [allMeals]
+  );
+
+  const meals = useMemo(
+    () =>
+      allMeals.filter((m) => {
+        if (!m.loggedAt) return false;
+        return formatLocalDateKey(new Date(m.loggedAt)) === selectedKey;
+      }),
+    [allMeals, selectedKey]
   );
 
   const consumed = useMemo(() => {
@@ -69,6 +76,11 @@ export default function HomeScreen() {
     carbsG: profile?.carbsG ?? null,
     fatG: profile?.fatG ?? null,
   };
+
+  const displayedMeals = useMemo(
+    () => meals.filter((m) => m.status !== 'analyzing'),
+    [meals]
+  );
 
   return (
     <View style={styles.screen}>
@@ -113,7 +125,7 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Today&apos;s Meals</Text>
-          {meals.length > 0 && (
+          {displayedMeals.length > 0 && (
             <Pressable
               accessibilityRole="button"
               onPress={() => router.push('/history')}
@@ -123,7 +135,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {meals.length === 0 && !mealsLoading ? (
+        {displayedMeals.length === 0 && !mealsLoading ? (
           <View style={styles.emptyCard}>
             <View style={styles.emptyIconCircle}>
               <Sparkles size={28} color={Palette.brand} />
@@ -140,7 +152,7 @@ export default function HomeScreen() {
           </View>
         ) : (
           <View style={styles.mealList}>
-            {meals.map((meal) => (
+            {displayedMeals.map((meal) => (
               <MealCard
                 key={meal.id}
                 meal={meal as any}

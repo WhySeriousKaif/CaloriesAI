@@ -56,25 +56,24 @@ export const analyzeMeal = schemaTask({
     // Constructed per call so a missing key fails inside the run, not at import.
     const openai = new OpenAI({ apiKey, timeout: 45_000, maxRetries: 0 });
 
-    const response = await openai.responses.parse({
+    const response = await openai.chat.completions.create({
       model: MODEL,
-      input: [
+      response_format: { type: "json_object" },
+      messages: [
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
           content: [
-            // The row keeps the full-size URL for the UI; the model gets a
-            // downscaled copy, because it downsamples anyway and the extra
-            // pixels are pure upload latency and tokens.
-            { type: "input_image", image_url: visionUrl(imageUrl), detail: "auto" },
+            { type: "text", text: "Analyze this meal photo. Return JSON with: is_food (boolean), name (string), calories (number), protein_g (number), carbs_g (number), fat_g (number)." },
+            { type: "image_url", image_url: { url: visionUrl(imageUrl) } },
           ],
         },
       ],
-      text: { format: zodTextFormat(visionSchema, "meal") },
     });
 
-    const out = response.output_parsed;
-    if (!out) throw new Error("OpenAI returned no structured output"); // retried once
+    const content = response.choices[0]?.message?.content;
+    if (!content) throw new Error("OpenAI returned no structured output");
+    const out = JSON.parse(content);
 
     // A photo of a chair is not a meal that failed — it is not a meal. The row
     // is kept and flagged so the card can say exactly that, and the totals skip
