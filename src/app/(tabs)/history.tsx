@@ -34,30 +34,41 @@ import {
 import { BottomTabInset, MaxContentWidth } from '@/constants/theme';
 import { MealItem, useMeals } from '@/hooks/use-meals';
 
-function formatDateHeader(dateString: string): string {
+import { formatLocalDateKey } from '@/components/home/DateStrip';
+import { MealDetailModal } from '@/components/home/MealDetailModal';
+
+function formatDateHeader(dateKey: string): string {
+  if (dateKey === 'Unknown Date') return 'Logged Meals';
   try {
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return dateString;
+    const parts = dateKey.split('-');
+    if (parts.length === 3) {
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1;
+      const dStr = parseInt(parts[2], 10);
+      const d = new Date(y, m, dStr);
 
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
+      const todayStr = formatLocalDateKey(new Date());
+      const yesterdayDate = new Date();
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayStr = formatLocalDateKey(yesterdayDate);
 
-    if (d.toDateString() === today.toDateString()) {
-      return 'Today';
+      if (dateKey === todayStr) {
+        return 'Today';
+      }
+      if (dateKey === yesterdayStr) {
+        return 'Yesterday';
+      }
+
+      return d.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+      });
     }
-    if (d.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    }
-
-    return d.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-    });
   } catch {
-    return dateString;
+    // fallback
   }
+  return dateKey;
 }
 
 function formatTime(dateString: string): string {
@@ -83,7 +94,7 @@ export default function HistoryScreen() {
     }, [reload])
   );
 
-  // Filter and group meals by day
+  // Filter and group meals by local day
   const filteredMeals = useMemo(() => {
     if (!search.trim()) return meals;
     const q = search.toLowerCase();
@@ -99,7 +110,7 @@ export default function HistoryScreen() {
 
     for (const meal of filteredMeals) {
       const dateKey = meal.loggedAt
-        ? meal.loggedAt.split('T')[0]
+        ? formatLocalDateKey(new Date(meal.loggedAt))
         : 'Unknown Date';
 
       if (!map.has(dateKey)) {
@@ -264,66 +275,12 @@ export default function HistoryScreen() {
         )}
       </ScrollView>
 
-      {/* Meal Detail Modal */}
-      {selectedMeal ? (
-        <Modal
-          visible
-          transparent
-          animationType="slide"
-          onRequestClose={() => setSelectedMeal(null)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{selectedMeal.name || 'Meal Detail'}</Text>
-                <Pressable onPress={() => setSelectedMeal(null)} hitSlop={10}>
-                  <X size={22} color={Palette.text} />
-                </Pressable>
-              </View>
-
-              {selectedMeal.imageUrl ? (
-                <Image
-                  source={{ uri: selectedMeal.imageUrl }}
-                  style={styles.modalImage}
-                  contentFit="cover"
-                />
-              ) : null}
-
-              <View style={styles.modalCalorieRow}>
-                <Flame size={24} color={Palette.brand} fill={Palette.brand} />
-                <Text style={styles.modalCalories}>{selectedMeal.calories ?? 0}</Text>
-                <Text style={styles.modalKcalLabel}>total calories</Text>
-              </View>
-
-              <View style={styles.modalMacrosGrid}>
-                <View style={[styles.modalMacroPill, { backgroundColor: Macro.protein.tint }]}>
-                  <Text style={[styles.modalMacroVal, { color: Macro.protein.color }]}>
-                    {selectedMeal.proteinG ?? 0}g
-                  </Text>
-                  <Text style={styles.modalMacroLbl}>Protein</Text>
-                </View>
-                <View style={[styles.modalMacroPill, { backgroundColor: Macro.carbs.tint }]}>
-                  <Text style={[styles.modalMacroVal, { color: Macro.carbs.color }]}>
-                    {selectedMeal.carbsG ?? 0}g
-                  </Text>
-                  <Text style={styles.modalMacroLbl}>Carbs</Text>
-                </View>
-                <View style={[styles.modalMacroPill, { backgroundColor: Macro.fat.tint }]}>
-                  <Text style={[styles.modalMacroVal, { color: Macro.fat.color }]}>
-                    {selectedMeal.fatG ?? 0}g
-                  </Text>
-                  <Text style={styles.modalMacroLbl}>Fat</Text>
-                </View>
-              </View>
-
-              <Pressable
-                style={({ pressed }) => [styles.closeBtn, pressed && styles.pressed]}
-                onPress={() => setSelectedMeal(null)}>
-                <Text style={styles.closeBtnText}>Close</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Modal>
-      ) : null}
+      {/* Full AI Meal Detail Modal */}
+      <MealDetailModal
+        visible={!!selectedMeal}
+        meal={selectedMeal}
+        onClose={() => setSelectedMeal(null)}
+      />
     </View>
   );
 }

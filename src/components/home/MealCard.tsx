@@ -123,7 +123,23 @@ function AnalyzingCard() {
   );
 }
 
-/** `analyze-meal` gave up — offer a retake rather than a dead row. */
+import { Skeleton } from '@/components/common/Skeleton';
+
+export function SkeletonMealCard() {
+  return (
+    <View style={styles.card}>
+      <Skeleton style={{ width: 72, height: 72, borderRadius: 18 }} />
+      <View style={styles.middle}>
+        <Skeleton style={{ width: 130, height: 18, borderRadius: 6, marginBottom: 8 }} />
+        <Skeleton style={{ width: 90, height: 14, borderRadius: 6 }} />
+      </View>
+      <View style={styles.right}>
+        <Skeleton style={{ width: 50, height: 24, borderRadius: 6 }} />
+      </View>
+    </View>
+  );
+}
+
 function FailedCard({ onRetake }: { onRetake?: () => void }) {
   return (
     <View style={[styles.card, styles.failedCard]}>

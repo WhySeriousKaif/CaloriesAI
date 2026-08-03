@@ -34,16 +34,12 @@ export function useMeals(date?: string) {
       const url = date ? `/api/meals?date=${encodeURIComponent(date)}` : '/api/meals';
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
-      }).catch((err) => {
-        console.warn('[use-meals] Fetch network error:', err);
-        return null;
-      });
+      }).catch(() => null);
 
       if (!res || !res.ok) return;
       const data = await res.json().catch(() => null);
       if (data) setMeals(data.meals || (Array.isArray(data) ? data : []));
     } catch (err) {
-      console.warn('[use-meals] Error fetching meals:', err);
       setError(err instanceof Error ? err.message : 'Error fetching meals');
     } finally {
       setLoading(false);

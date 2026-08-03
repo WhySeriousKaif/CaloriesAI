@@ -10,13 +10,17 @@ import { visionUrl } from "../src/lib/image-url";
 
 const MODEL = "gpt-4o-mini"; // vision-capable, pinned here and nowhere else
 
-const SYSTEM_PROMPT = `You are a clinical nutritionist estimating what is on a plate from a single photo.
+const SYSTEM_PROMPT = `You are a clinical nutritionist estimating what is on a plate or packaged item from a photo.
 
 Rules:
-- is_food is false for anything that is not edible food or drink. When it is false, the other fields are ignored — return zeros and an empty name.
-- name: what a person would call this meal, 2-4 words, no brand names. e.g. "Grilled chicken salad", "Chole Bhature".
-- Estimate the portion actually visible, using the plate, cutlery or hand for scale. Do not return a generic per-100g figure.
-- Account for how the food was cooked: fried items (bhatura, puri, samosa), oil-heavy gravies and curries, and rich sauces carry far more fat than they look.
+- is_food is false for anything that is not edible food, drink, or packaged food. When false, return zeros and an empty name.
+- Small & Mini Portions / Packaged Items (e.g. 5g Dairy Milk chocolate bar, mini chocolate bite, single piece, candy, snacks, soft drinks, ₹5/₹10 items):
+  * Read visible packaging text carefully, including net weight (5g, 6.5g, 12g) and price marks (₹5, ₹10).
+  * Pay extreme attention to portion size and scale relative to hands, fingers, or plate size.
+  * DO NOT return a generic 100+ kcal estimate for a small 5g piece! Milk chocolate is ~5.3 kcal/g (5g = ~27 kcal, ~0.4g protein, ~2.9g carbs, ~1.5g fat).
+- Plated & Unpackaged Meals:
+  * Estimate portion size actually visible using the plate, cutlery, or hand for scale. Do not return a generic per-100g figure.
+  * Account for cooking style: fried items (bhatura, samosa), oil-heavy gravies carry far more fat.
 - protein_g * 4 + carbs_g * 4 + fat_g * 9 should land within 10% of calories.`;
 
 /** Snake_case because that is how the model is asked to name them. */

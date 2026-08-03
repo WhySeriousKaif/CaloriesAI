@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Logo } from '@/components/logo';
 import { Radius } from '@/constants/design';
+import { useStreak } from '@/hooks/use-streak';
 import { StreakModal } from './StreakModal';
 
 /** Local-time greeting. Purely cosmetic, so the device clock is good enough. */
@@ -16,6 +17,7 @@ function greetingFor(hour: number) {
 
 export function GreetingHeader() {
   const { user } = useUser();
+  const { streak } = useStreak();
   const [showStreak, setShowStreak] = useState(false);
 
   // Clerk users signed up via Google/Apple may have no first name set.
@@ -28,12 +30,14 @@ export function GreetingHeader() {
   const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
   const greeting = greetingFor(new Date().getHours());
 
+  const currentStreak = streak > 0 ? streak : 1;
+
   return (
     <View style={styles.container}>
       <StreakModal
         visible={showStreak}
         onClose={() => setShowStreak(false)}
-        streakCount={1}
+        streakCount={currentStreak}
       />
 
       <View style={styles.topRow}>
@@ -46,12 +50,12 @@ export function GreetingHeader() {
           accessibilityLabel="View Streak"
           hitSlop={8}>
           <Flame size={16} color="#EF4444" fill="#EF4444" />
-          <Text style={styles.streakCount}>1</Text>
+          <Text style={styles.streakCount}>{currentStreak}</Text>
         </Pressable>
       </View>
 
       <Text style={styles.greeting}>
-        {greeting}, {name}! <Text style={styles.wave}>👋</Text>
+        {greeting}, {name}!
       </Text>
       <Text style={styles.subtitle}>Let&apos;s make today a healthy one.</Text>
     </View>
@@ -60,43 +64,48 @@ export function GreetingHeader() {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 2,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   streakButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    gap: 6,
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: Radius.pill,
-    backgroundColor: '#FEE2E2',
-  },
-  streakCount: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#EF4444',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
   },
   pressed: {
-    opacity: 0.7,
+    opacity: 0.75,
+  },
+  streakCount: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#991B1B',
   },
   greeting: {
-    fontSize: 21,
-    fontWeight: '700',
-    color: '#1A1A1A',
-    letterSpacing: -0.4,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111827',
+    letterSpacing: -0.5,
   },
   wave: {
-    fontSize: 18,
+    fontSize: 22,
   },
   subtitle: {
     fontSize: 14,
-    fontWeight: '400',
-    color: '#6E6E73',
+    fontWeight: '500',
+    color: '#6B7280',
+    marginTop: 2,
   },
 });

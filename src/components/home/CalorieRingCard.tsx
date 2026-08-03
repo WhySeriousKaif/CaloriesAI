@@ -17,19 +17,15 @@ const STROKE = 14;
 const RADIUS = (RING_SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
+import { Skeleton } from '@/components/common/Skeleton';
+
 type CalorieRingCardProps = {
   consumed: number;
   target: number;
+  loading?: boolean;
 };
 
-/**
- * The day's headline: calories left, and a donut of how much of the target has
- * been eaten.
- *
- * Over-eating clamps the arc at full rather than wrapping — a second lap would
- * read as "barely started" at a glance, which is exactly backwards.
- */
-export function CalorieRingCard({ consumed, target }: CalorieRingCardProps) {
+export function CalorieRingCard({ consumed, target, loading }: CalorieRingCardProps) {
   const [showInfo, setShowInfo] = useState(false);
   const hasTarget = target > 0;
   const remaining = Math.max(0, target - consumed);
@@ -56,12 +52,21 @@ export function CalorieRingCard({ consumed, target }: CalorieRingCardProps) {
           <Text style={styles.label}>
             {overBudget ? 'Over by' : 'Calories left'}
           </Text>
-          <Text style={styles.bigNumber}>
-            {hasTarget ? (overBudget ? consumed - target : remaining) : '—'}
-          </Text>
-          <Text style={styles.ofTarget}>
-            {hasTarget ? `of ${target.toLocaleString()} kcal` : 'no target set'}
-          </Text>
+          {loading ? (
+            <View style={{ marginVertical: 6 }}>
+              <Skeleton style={{ width: 110, height: 40, borderRadius: 10 }} />
+              <Skeleton style={{ width: 85, height: 14, borderRadius: 6, marginTop: 6 }} />
+            </View>
+          ) : (
+            <>
+              <Text style={styles.bigNumber}>
+                {hasTarget ? (overBudget ? consumed - target : remaining) : '—'}
+              </Text>
+              <Text style={styles.ofTarget}>
+                {hasTarget ? `of ${target.toLocaleString()} kcal` : 'no target set'}
+              </Text>
+            </>
+          )}
 
           <View style={[styles.pill, overBudget && styles.pillWarn]}>
             <Leaf
@@ -94,15 +99,18 @@ export function CalorieRingCard({ consumed, target }: CalorieRingCardProps) {
               fill="none"
               strokeLinecap="round"
               strokeDasharray={CIRCUMFERENCE}
-              strokeDashoffset={dashOffset}
-              // Start the sweep at 12 o'clock instead of 3.
+              strokeDashoffset={loading ? CIRCUMFERENCE * 0.7 : dashOffset}
               transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
             />
           </Svg>
 
           <View style={styles.ringCenter} pointerEvents="none">
             <Flame size={18} color={Palette.text} strokeWidth={2.2} fill={Palette.text} />
-            <Text style={styles.consumed}>{consumed.toLocaleString()}</Text>
+            {loading ? (
+              <Skeleton style={{ width: 44, height: 20, borderRadius: 6, marginVertical: 2 }} />
+            ) : (
+              <Text style={styles.consumed}>{consumed.toLocaleString()}</Text>
+            )}
             <Text style={styles.consumedLabel}>Consumed</Text>
           </View>
         </View>

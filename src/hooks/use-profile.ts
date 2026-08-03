@@ -53,10 +53,7 @@ export function useProfile() {
 
       const response = await fetch('/api/profile', {
         headers: { Authorization: `Bearer ${token}` },
-      }).catch((err) => {
-        console.warn('[use-profile] Network fetch exception:', err);
-        return null;
-      });
+      }).catch(() => null);
 
       if (!response) return;
 

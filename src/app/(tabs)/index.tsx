@@ -10,7 +10,8 @@ import { CalorieRingCard } from '@/components/home/CalorieRingCard';
 import { DateStrip, formatLocalDateKey, weekAround } from '@/components/home/DateStrip';
 import { GreetingHeader } from '@/components/home/GreetingHeader';
 import { MacroCard } from '@/components/home/MacroCard';
-import { MealCard } from '@/components/home/MealCard';
+import { MealCard, SkeletonMealCard } from '@/components/home/MealCard';
+import { MealDetailModal } from '@/components/home/MealDetailModal';
 import { Layout, Macro, NumeralFont, Palette, Radius } from '@/constants/design';
 import { BottomTabInset, MaxContentWidth } from '@/constants/theme';
 import { MealItem, useMeals } from '@/hooks/use-meals';
@@ -106,12 +107,12 @@ export default function HomeScreen() {
           />
         </View>
 
-        <CalorieRingCard consumed={consumed.calories} target={targets.calories} />
+        <CalorieRingCard consumed={consumed.calories} target={targets.calories} loading={mealsLoading} />
 
         <View style={styles.macroRow}>
-          <MacroCard macro="protein" value={consumed.proteinG} target={targets.proteinG} />
-          <MacroCard macro="carbs" value={consumed.carbsG} target={targets.carbsG} />
-          <MacroCard macro="fat" value={consumed.fatG} target={targets.fatG} />
+          <MacroCard macro="protein" value={consumed.proteinG} target={targets.proteinG} loading={mealsLoading} />
+          <MacroCard macro="carbs" value={consumed.carbsG} target={targets.carbsG} loading={mealsLoading} />
+          <MacroCard macro="fat" value={consumed.fatG} target={targets.fatG} loading={mealsLoading} />
         </View>
 
         {!profileLoading && !profile ? (
@@ -135,7 +136,12 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {displayedMeals.length === 0 && !mealsLoading ? (
+        {mealsLoading ? (
+          <View style={styles.mealList}>
+            <SkeletonMealCard />
+            <SkeletonMealCard />
+          </View>
+        ) : displayedMeals.length === 0 ? (
           <View style={styles.emptyCard}>
             <View style={styles.emptyIconCircle}>
               <Sparkles size={28} color={Palette.brand} />
@@ -164,72 +170,12 @@ export default function HomeScreen() {
         )}
       </ScrollView>
 
-      {/* Meal Detail Modal */}
-      {selectedMeal ? (
-        <Modal
-          visible
-          transparent
-          animationType="slide"
-          onRequestClose={() => setSelectedMeal(null)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{selectedMeal.name || 'Meal Detail'}</Text>
-                <Pressable onPress={() => setSelectedMeal(null)} hitSlop={10}>
-                  <X size={22} color={Palette.text} />
-                </Pressable>
-              </View>
-
-              {selectedMeal.imageUrl ? (
-                <Image
-                  source={{ uri: selectedMeal.imageUrl }}
-                  style={styles.modalImage}
-                  contentFit="cover"
-                />
-              ) : null}
-
-              <View style={styles.modalCalorieRow}>
-                <Flame size={24} color={Palette.brand} fill={Palette.brand} />
-                <Text style={styles.modalCalories}>{selectedMeal.calories ?? 0}</Text>
-                <Text style={styles.modalKcalLabel}>total calories</Text>
-              </View>
-
-              <View style={styles.modalMacrosGrid}>
-                <View style={[styles.modalMacroPill, { backgroundColor: Macro.protein.tint }]}>
-                  <Text style={[styles.modalMacroVal, { color: Macro.protein.color }]}>
-                    {selectedMeal.proteinG ?? 0}g
-                  </Text>
-                  <Text style={styles.modalMacroLbl}>Protein</Text>
-                </View>
-                <View style={[styles.modalMacroPill, { backgroundColor: Macro.carbs.tint }]}>
-                  <Text style={[styles.modalMacroVal, { color: Macro.carbs.color }]}>
-                    {selectedMeal.carbsG ?? 0}g
-                  </Text>
-                  <Text style={styles.modalMacroLbl}>Carbs</Text>
-                </View>
-                <View style={[styles.modalMacroPill, { backgroundColor: Macro.fat.tint }]}>
-                  <Text style={[styles.modalMacroVal, { color: Macro.fat.color }]}>
-                    {selectedMeal.fatG ?? 0}g
-                  </Text>
-                  <Text style={styles.modalMacroLbl}>Fat</Text>
-                </View>
-              </View>
-
-              {selectedMeal.loggedAt ? (
-                <Text style={styles.loggedAtText}>
-                  Logged at {new Date(selectedMeal.loggedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                </Text>
-              ) : null}
-
-              <Pressable
-                style={({ pressed }) => [styles.closeBtn, pressed && styles.pressed]}
-                onPress={() => setSelectedMeal(null)}>
-                <Text style={styles.closeBtnText}>Close</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Modal>
-      ) : null}
+      {/* Full AI Meal Detail Modal */}
+      <MealDetailModal
+        visible={!!selectedMeal}
+        meal={selectedMeal}
+        onClose={() => setSelectedMeal(null)}
+      />
     </View>
   );
 }

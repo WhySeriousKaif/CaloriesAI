@@ -10,7 +10,9 @@ export default function TabsLayout() {
   const { isLoaded, isSignedIn } = useAuth();
   const { profile, loading } = useProfile();
 
-  if (!isLoaded || loading) return null;
+  if (!isLoaded || loading) {
+    return <View style={styles.container} />;
+  }
   if (!isSignedIn) return <Redirect href="/(auth)/sign-in" />;
 
   // Mandate onboarding for all users who haven't completed onboarding yet

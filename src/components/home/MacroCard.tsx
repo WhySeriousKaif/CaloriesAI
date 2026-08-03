@@ -16,14 +16,17 @@ const ICONS = {
   fat: Droplet,
 } as const;
 
+import { Skeleton } from '@/components/common/Skeleton';
+
 type MacroCardProps = {
   macro: MacroKey;
   value: number;
   target: number | null;
+  loading?: boolean;
 };
 
 /** One of the three macro tiles under the calorie ring. */
-export function MacroCard({ macro, value, target }: MacroCardProps) {
+export function MacroCard({ macro, value, target, loading }: MacroCardProps) {
   const { color, tint, label } = Macro[macro];
   const Icon = ICONS[macro];
 
@@ -39,8 +42,14 @@ export function MacroCard({ macro, value, target }: MacroCardProps) {
       </View>
 
       <View style={styles.valueRow}>
-        <Text style={styles.value}>{value}</Text>
-        <Text style={styles.target}>{target ? ` / ${target}g` : ' g'}</Text>
+        {loading ? (
+          <Skeleton style={{ width: 45, height: 18, borderRadius: 6, marginVertical: 2 }} />
+        ) : (
+          <>
+            <Text style={styles.value}>{value}</Text>
+            <Text style={styles.target}>{target ? ` / ${target}g` : ' g'}</Text>
+          </>
+        )}
       </View>
 
       <View style={styles.track}>

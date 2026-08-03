@@ -34,6 +34,8 @@ import { BottomTabInset, MaxContentWidth } from '@/constants/theme';
 import { useMeals } from '@/hooks/use-meals';
 import { useProfile } from '@/hooks/use-profile';
 
+import { formatLocalDateKey } from '@/components/home/DateStrip';
+
 export default function AnalyticsScreen() {
   const insets = useSafeAreaInsets();
   const { profile } = useProfile();
@@ -44,21 +46,25 @@ export default function AnalyticsScreen() {
   const targetCarbs = profile?.carbsG ?? 220;
   const targetFat = profile?.fatG ?? 70;
 
-  // Compute 7-day analytics metrics
+  // Compute real 7-day analytics metrics based on user's logged meals
   const analyticsData = useMemo(() => {
     const completedMeals = meals.filter((m) => m.status === 'completed');
 
-    // Build last 7 days array
-    const days: { label: string; dateStr: string; calories: number; target: number }[] = [];
+    // Build last 7 days array (local time format)
+    const days: { label: string; dateStr: string; calories: number; target: number; dayMeals: typeof completedMeals }[] = [];
     const now = new Date();
 
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(now.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      const dayLabel = i === 0 ? 'Today' : i === 1 ? 'Yesterday' : d.toLocaleDateString('en-US', { weekday: 'short' });
+      const dateStr = formatLocalDateKey(d);
+      // Use short day of week label (e.g. Wed, Thu, Fri, Sat, Sun, Mon, Today) - no "Yesterday"
+      const dayLabel = i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' });
 
-      const dayMeals = completedMeals.filter((m) => m.loggedAt && m.loggedAt.startsWith(dateStr));
+      const dayMeals = completedMeals.filter((m) => {
+        if (!m.loggedAt) return false;
+        return formatLocalDateKey(new Date(m.loggedAt)) === dateStr;
+      });
       const dayCals = dayMeals.reduce((acc, m) => acc + (m.calories ?? 0), 0);
 
       days.push({
@@ -66,16 +72,19 @@ export default function AnalyticsScreen() {
         dateStr,
         calories: dayCals,
         target: dailyTarget,
+        dayMeals,
       });
     }
 
-    const totalCals = completedMeals.reduce((acc, m) => acc + (m.calories ?? 0), 0);
-    const totalProtein = completedMeals.reduce((acc, m) => acc + (m.proteinG ?? 0), 0);
-    const totalCarbs = completedMeals.reduce((acc, m) => acc + (m.carbsG ?? 0), 0);
-    const totalFat = completedMeals.reduce((acc, m) => acc + (m.fatG ?? 0), 0);
+    // Aggregate totals strictly for meals logged in the 7-day window
+    const sevenDayMeals = days.flatMap((d) => d.dayMeals);
+    const totalCals = sevenDayMeals.reduce((acc, m) => acc + (m.calories ?? 0), 0);
+    const totalProtein = sevenDayMeals.reduce((acc, m) => acc + (m.proteinG ?? 0), 0);
+    const totalCarbs = sevenDayMeals.reduce((acc, m) => acc + (m.carbsG ?? 0), 0);
+    const totalFat = sevenDayMeals.reduce((acc, m) => acc + (m.fatG ?? 0), 0);
 
     const loggedDaysCount = days.filter((d) => d.calories > 0).length;
-    const avgCalories = loggedDaysCount > 0 ? Math.round(totalCals / Math.max(1, loggedDaysCount)) : 0;
+    const avgCalories = loggedDaysCount > 0 ? Math.round(totalCals / loggedDaysCount) : 0;
 
     // Macro energy distribution: protein (4kcal/g), carbs (4kcal/g), fat (9kcal/g)
     const pEnergy = totalProtein * 4;

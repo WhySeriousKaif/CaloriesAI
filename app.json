@@ -20,7 +20,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ],
       "package": "com.anonymous.CalorieAI"
     },
@@ -54,11 +55,23 @@
           "photosPermission": "Calora reads the calories and macros from meal photos you pick."
         }
       ],
-      "@sentry/react-native/expo"
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "calorie-ai"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "06846c98-e0cd-4c94-93ab-1bcc7747dace"
+      }
     }
   }
 }

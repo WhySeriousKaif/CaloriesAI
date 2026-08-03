@@ -38,7 +38,6 @@ export function ProfileSync() {
 
         const token = await getToken();
         if (!token) {
-          console.warn('[profile-sync] Session token not available yet, will retry.');
           return;
         }
 
@@ -61,7 +60,6 @@ export function ProfileSync() {
         }
 
         await clearPendingOnboarding();
-        console.log('[profile-sync] Onboarding profile successfully synced to Neon DB.');
         await reload();
         router.replace('/(tabs)');
       } catch (error) {

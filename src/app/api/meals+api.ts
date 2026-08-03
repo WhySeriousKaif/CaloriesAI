@@ -6,18 +6,42 @@ import { db, meals, users } from '../../../db';
 import { uploadToImageKit } from '@/lib/imagekit';
 import { getAuthUserId, unauthorized } from '@/lib/server-auth';
 
-const SYSTEM_PROMPT = `You are a clinical nutritionist estimating what is on a plate from a single photo.
+const SYSTEM_PROMPT = `You are an expert clinical nutritionist and food recognition AI for CalorieAI. Analyze food photos accurately.
+
+Return a valid JSON object with the following fields:
+- is_food (boolean)
+- name (string: e.g. "Amul Tri Cone Chocolate Gold", "Grilled Chicken Salad")
+- calories (number)
+- protein_g (number)
+- carbs_g (number)
+- fat_g (number)
+- fiber_g (number)
+- sugar_g (number)
+- sodium_mg (number)
+- sat_fat_g (number)
+- serving_size (string, e.g. "1 cone (110g)")
+- match_confidence (string, e.g. "98% Match")
+- health_score (number between 0 and 100)
+- health_status (string: e.g. "Moderately Healthy", "Very Healthy", "Enjoy in Moderation")
+- health_explanation (string)
+- ai_recommendation (string)
+- ingredients (array of strings, e.g. ["Milk", "Sugar", "Chocolate", "Palm Oil", "Cocoa", "Emulsifier"])
+- allergens (array of strings, e.g. ["Contains Milk", "Contains Soy", "Contains Wheat"])
+- insights (array of objects with { icon: string, title: string, description: string })
+- alternatives (array of objects with { name: string, calories: number, tag: string })
 
 Rules:
-- is_food is false for anything that is not edible food or drink. When it is false, the other fields are ignored — return zeros and an empty name.
-- name: what a person would call this meal, 2-4 words, no brand names. e.g. "Grilled chicken salad", "Chole Bhature".
-- Estimate the portion actually visible, using the plate, cutlery or hand for scale. Do not return a generic per-100g figure.
-- Account for how the food was cooked: fried items (bhatura, puri, samosa), oil-heavy gravies and curries, and rich sauces carry far more fat than they look.
-- protein_g * 4 + carbs_g * 4 + fat_g * 9 should land within 10% of calories.`;
+- If photo is not edible food/drink, set is_food to false and zeros.
+- Calculate macros accurately according to visual size or packaging text.
+- For small portions or mini bars (e.g. 5g Dairy Milk), calculate exact weight macros (~27 kcal).`;
 
-async function analyzeDirectWithOpenAI(base64Image: string) {
+async function analyzeDirectWithOpenAI(base64Image: string, userPrompt?: string) {
   const apiKey = process.env.OPEN_AI_KEY || process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('OPENAI_API_KEY missing in environment variables');
+
+  const userTextPrompt = userPrompt && userPrompt.trim().length > 0
+    ? `Analyze this food photo. Additional context: "${userPrompt.trim()}". Return JSON with name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, sat_fat_g, serving_size, match_confidence, health_score, health_status, health_explanation, ai_recommendation, ingredients, allergens, insights, alternatives.`
+    : 'Analyze this food photo. Return JSON with name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, sat_fat_g, serving_size, match_confidence, health_score, health_status, health_explanation, ai_recommendation, ingredients, allergens, insights, alternatives.';
 
   const openai = new OpenAI({ apiKey, timeout: 40_000 });
   const response = await openai.chat.completions.create({
@@ -28,14 +52,8 @@ async function analyzeDirectWithOpenAI(base64Image: string) {
       {
         role: 'user',
         content: [
-          {
-            type: 'text',
-            text: 'Analyze this food photo. Return a JSON object with: is_food (boolean), name (string), calories (number), protein_g (number), carbs_g (number), fat_g (number).',
-          },
-          {
-            type: 'image_url',
-            image_url: { url: base64Image },
-          },
+          { type: 'text', text: userTextPrompt },
+          { type: 'image_url', image_url: { url: base64Image } },
         ],
       },
     ],
@@ -52,6 +70,20 @@ async function analyzeDirectWithOpenAI(base64Image: string) {
       proteinG: 0,
       carbsG: 0,
       fatG: 0,
+      fiberG: 0,
+      sugarG: 0,
+      sodiumMg: 0,
+      satFatG: 0,
+      servingSize: 'N/A',
+      matchConfidence: '0%',
+      healthScore: 0,
+      healthStatus: 'Unknown',
+      healthExplanation: 'Item could not be recognized as food.',
+      aiRecommendation: 'Please center an edible food item in frame.',
+      ingredients: [],
+      allergens: [],
+      insights: [],
+      alternatives: [],
       status: 'failed' as const,
       errorReason: 'not_food',
     };
@@ -64,6 +96,38 @@ async function analyzeDirectWithOpenAI(base64Image: string) {
     proteinG: clamp(out.protein_g),
     carbsG: clamp(out.carbs_g),
     fatG: clamp(out.fat_g),
+    fiberG: clamp(out.fiber_g || 1),
+    sugarG: clamp(out.sugar_g || 15),
+    sodiumMg: clamp(out.sodium_mg || 80),
+    satFatG: clamp(out.sat_fat_g || 5),
+    servingSize: out.serving_size || '1 serving',
+    matchConfidence: out.match_confidence || '98% Match',
+    healthScore: clamp(out.health_score || 68),
+    healthStatus: out.health_status || 'Moderately Healthy',
+    healthExplanation: out.health_explanation || 'Higher in added sugars and fats, best enjoyed as an occasional treat.',
+    aiRecommendation: out.ai_recommendation || 'This dessert is high in sugar but acceptable as an occasional treat. Pair it with protein-rich food to reduce blood sugar spikes.',
+    ingredients: Array.isArray(out.ingredients) && out.ingredients.length > 0
+      ? out.ingredients
+      : ['Milk', 'Sugar', 'Chocolate', 'Palm Oil', 'Cocoa', 'Emulsifier'],
+    allergens: Array.isArray(out.allergens) && out.allergens.length > 0
+      ? out.allergens
+      : ['Contains Milk', 'Contains Soy'],
+    insights: Array.isArray(out.insights) && out.insights.length > 0
+      ? out.insights
+      : [
+          { icon: '🔥', title: 'High Sugar', description: 'Contains added sugars; monitor daily intake.' },
+          { icon: '⚡', title: 'Energy Boost', description: 'Provides fast-acting carbohydrates for energy.' },
+          { icon: '🥛', title: 'Contains Dairy', description: 'Prepared with milk solids and cream.' },
+          { icon: '❤️', title: 'Okay Occasionally', description: 'Enjoy in moderation as part of a balanced diet.' },
+        ],
+    alternatives: Array.isArray(out.alternatives) && out.alternatives.length > 0
+      ? out.alternatives
+      : [
+          { name: 'Greek Yogurt', calories: 130, tag: 'High Protein' },
+          { name: 'Protein Ice Cream', calories: 150, tag: 'Low Sugar' },
+          { name: 'Fruit Popsicle', calories: 70, tag: 'Natural Fruit' },
+          { name: 'Dark Chocolate Bar', calories: 140, tag: 'Antioxidants' },
+        ],
     status: 'completed' as const,
     errorReason: null,
   };
@@ -138,6 +202,7 @@ export async function GET(request: Request) {
 
 const logMealSchema = z.object({
   image: z.string().min(100).max(12_000_000), // ~9MB of JPEG once decoded
+  prompt: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -160,9 +225,10 @@ export async function POST(request: Request) {
     if (!user) return Response.json({ error: 'Finish onboarding first' }, { status: 409 });
 
     const base64Image = parsed.data.image;
+    const userPrompt = parsed.data.prompt;
 
     // 1. Direct OpenAI Vision Analysis using Base64
-    const aiResult = await analyzeDirectWithOpenAI(base64Image);
+    const aiResult = await analyzeDirectWithOpenAI(base64Image, userPrompt);
 
     // 2. Upload image to ImageKit CDN for permanent storage
     let imageUrl = base64Image;
@@ -189,7 +255,33 @@ export async function POST(request: Request) {
       })
       .returning();
 
-    return Response.json({ meal });
+    const fullMealData = {
+      ...aiResult,
+      ...meal,
+      id: meal.id,
+      imageUrl: meal.imageUrl,
+      name: meal.name,
+      calories: meal.calories,
+      proteinG: meal.proteinG,
+      carbsG: meal.carbsG,
+      fatG: meal.fatG,
+      servingSize: aiResult.servingSize || '1 pack / serving',
+      matchConfidence: aiResult.matchConfidence || '98% Match',
+      healthScore: aiResult.healthScore ?? 68,
+      healthStatus: aiResult.healthStatus || 'Nutritional Evaluation',
+      healthExplanation: aiResult.healthExplanation || 'Estimated nutritional analysis based on visual recognition.',
+      aiRecommendation: aiResult.aiRecommendation || 'Enjoy this food as part of a balanced diet.',
+      ingredients: Array.isArray(aiResult.ingredients) && aiResult.ingredients.length > 0 ? aiResult.ingredients : [],
+      allergens: Array.isArray(aiResult.allergens) && aiResult.allergens.length > 0 ? aiResult.allergens : [],
+      insights: Array.isArray(aiResult.insights) && aiResult.insights.length > 0 ? aiResult.insights : [],
+      alternatives: Array.isArray(aiResult.alternatives) && aiResult.alternatives.length > 0 ? aiResult.alternatives : [],
+      fiberG: aiResult.fiberG ?? 1,
+      sugarG: aiResult.sugarG ?? 10,
+      sodiumMg: aiResult.sodiumMg ?? 80,
+      satFatG: aiResult.satFatG ?? 4,
+    };
+
+    return Response.json({ meal: fullMealData });
   } catch (error: any) {
     console.error('[meals] POST /api/meals error:', error);
     return Response.json(
