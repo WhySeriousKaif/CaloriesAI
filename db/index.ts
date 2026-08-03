@@ -11,6 +11,6 @@ if (!databaseUrl) {
   );
 }
 
-export const db = drizzle(neon(databaseUrl), { schema });
+export const db = drizzle({ client: neon(databaseUrl), schema, casing: "snake_case" });
 
 export * from "./schema";

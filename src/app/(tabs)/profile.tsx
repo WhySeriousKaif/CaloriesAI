@@ -7,14 +7,27 @@ import {
   ChevronRight,
   Flame,
   LogOut,
+  Pencil,
   Ruler,
-  Scale,
   Salad,
+  Scale,
   Target,
   Trash2,
   User as UserIcon,
+  X,
 } from 'lucide-react-native';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -39,13 +52,59 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useUser();
   const { signOut, getToken } = useAuth();
-  const { profile, loading } = useProfile();
+  const { profile, loading, reload } = useProfile();
 
   const heightCm = toNumber(profile?.heightCm);
   const weightKg = toNumber(profile?.weightKg);
   const targetWeightKg = toNumber(profile?.targetWeightKg);
 
   const isImperial = profile?.unitPreference === 'imperial';
+
+  // Edit Modal State
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editHeightCm, setEditHeightCm] = useState('175');
+  const [editWeightKg, setEditWeightKg] = useState('72');
+  const [editTargetWeightKg, setEditTargetWeightKg] = useState('68');
+  const [editGoal, setEditGoal] = useState('lose');
+  const [editActivityLevel, setEditActivityLevel] = useState('moderate');
+  const [editDietPreference, setEditDietPreference] = useState('classic');
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Unauthorized');
+
+      const response = await fetch('/api/profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          heightCm: Number(editHeightCm) || 175,
+          weightKg: Number(editWeightKg) || 72,
+          targetWeightKg: Number(editTargetWeightKg) || 68,
+          goal: editGoal,
+          activityLevel: editActivityLevel,
+          dietPreference: editDietPreference,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update profile');
+
+      setIsEditing(false);
+      reload();
+      Alert.alert('Profile Updated', 'Your body metrics and daily nutrition targets have been updated!');
+    } catch (err) {
+      console.error('[profile] Save profile error:', err);
+      Alert.alert('Error', 'Could not update profile metrics. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const height = heightCm
     ? isImperial
@@ -157,14 +216,31 @@ export default function ProfileScreen() {
         </View>
 
         {/* Body stats */}
-        <Text style={styles.sectionTitle}>Your details</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Your details</Text>
+          <Pressable
+            onPress={() => {
+              setEditHeightCm(String(heightCm ?? 175));
+              setEditWeightKg(String(weightKg ?? 72));
+              setEditTargetWeightKg(String(targetWeightKg ?? 68));
+              setEditGoal(profile?.goal ?? 'lose');
+              setEditActivityLevel(profile?.activityLevel ?? 'moderate');
+              setEditDietPreference(profile?.dietPreference ?? 'classic');
+              setIsEditing(true);
+            }}
+            style={({ pressed }) => [styles.editHeaderBtn, pressed && styles.pressed]}>
+            <Pencil size={15} color={Palette.brand} />
+            <Text style={styles.editHeaderBtnText}>Edit</Text>
+          </Pressable>
+        </View>
+
         <View style={styles.listCard}>
-          <StatRow icon={Ruler} label="Height" value={height} />
-          <StatRow icon={Scale} label="Current weight" value={formatWeight(weightKg)} />
-          <StatRow icon={Target} label="Goal weight" value={formatWeight(targetWeightKg)} />
-          <StatRow icon={Activity} label="Activity" value={titleCase(profile?.activityLevel)} />
-          <StatRow icon={Salad} label="Diet" value={titleCase(profile?.dietPreference)} />
-          <StatRow icon={Flame} label="Goal" value={titleCase(profile?.goal)} isLast />
+          <StatRow icon={Ruler} label="Height" value={height} onPress={() => setIsEditing(true)} />
+          <StatRow icon={Scale} label="Current weight" value={formatWeight(weightKg)} onPress={() => setIsEditing(true)} />
+          <StatRow icon={Target} label="Goal weight" value={formatWeight(targetWeightKg)} onPress={() => setIsEditing(true)} />
+          <StatRow icon={Activity} label="Activity" value={titleCase(profile?.activityLevel)} onPress={() => setIsEditing(true)} />
+          <StatRow icon={Salad} label="Diet" value={titleCase(profile?.dietPreference)} onPress={() => setIsEditing(true)} />
+          <StatRow icon={Flame} label="Goal" value={titleCase(profile?.goal)} onPress={() => setIsEditing(true)} isLast />
         </View>
 
         {loading ? <Text style={styles.loadingText}>Loading your details…</Text> : null}
@@ -185,6 +261,99 @@ export default function ProfileScreen() {
           <Text style={styles.deleteText}>Delete account</Text>
         </Pressable>
       </ScrollView>
+
+      {/* Edit Profile Modal */}
+      <Modal
+        visible={isEditing}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsEditing(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Profile Details</Text>
+              <Pressable onPress={() => setIsEditing(false)} hitSlop={10}>
+                <X size={22} color={Palette.text} />
+              </Pressable>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.formContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Height (cm)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  keyboardType="numeric"
+                  value={editHeightCm}
+                  onChangeText={setEditHeightCm}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Current Weight (kg)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  keyboardType="numeric"
+                  value={editWeightKg}
+                  onChangeText={setEditWeightKg}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Target Weight (kg)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  keyboardType="numeric"
+                  value={editTargetWeightKg}
+                  onChangeText={setEditTargetWeightKg}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Goal</Text>
+                <View style={styles.optionRow}>
+                  {['lose', 'maintain', 'gain'].map((g) => (
+                    <Pressable
+                      key={g}
+                      style={[styles.optionChip, editGoal === g && styles.optionChipSelected]}
+                      onPress={() => setEditGoal(g)}>
+                      <Text style={[styles.optionChipText, editGoal === g && styles.optionChipTextSelected]}>
+                        {titleCase(g)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Diet Preference</Text>
+                <View style={styles.optionRow}>
+                  {['classic', 'keto', 'vegan', 'vegetarian'].map((d) => (
+                    <Pressable
+                      key={d}
+                      style={[styles.optionChip, editDietPreference === d && styles.optionChipSelected]}
+                      onPress={() => setEditDietPreference(d)}>
+                      <Text style={[styles.optionChipText, editDietPreference === d && styles.optionChipTextSelected]}>
+                        {titleCase(d)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
+
+            <Pressable
+              disabled={saving}
+              style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]}
+              onPress={handleSaveProfile}>
+              {saving ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -212,25 +381,25 @@ function StatRow({
   icon: Icon,
   label,
   value,
+  onPress,
   isLast,
 }: {
   icon: typeof Ruler;
   label: string;
   value: string;
+  onPress?: () => void;
   isLast?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
-      // Editing lands in Phase 6 alongside PATCH /api/profile.
-      disabled
-      style={[styles.statRow, !isLast && styles.statRowBordered]}>
+      onPress={onPress}
+      style={({ pressed }) => [styles.statRow, !isLast && styles.statRowBordered, pressed && styles.pressed]}>
       <View style={styles.statIcon}>
         <Icon size={17} color={Palette.textSecondary} strokeWidth={2} />
       </View>
       <Text style={styles.statLabel}>{label}</Text>
       <Text style={styles.statValue}>{value}</Text>
-      <ChevronRight size={17} color={Palette.textTertiary} strokeWidth={2} />
     </Pressable>
   );
 }
@@ -435,5 +604,112 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
     transform: [{ scale: 0.99 }],
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    paddingRight: 4,
+  },
+  editHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
+    backgroundColor: Palette.brandTint,
+  },
+  editHeaderBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Palette.brand,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Palette.card,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    maxHeight: '85%',
+    gap: 16,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Palette.border,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: Palette.text,
+  },
+  formContent: {
+    gap: 16,
+    paddingVertical: 8,
+  },
+  inputGroup: {
+    gap: 6,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Palette.textSecondary,
+  },
+  textInput: {
+    height: 48,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Palette.border,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    color: Palette.text,
+    backgroundColor: Palette.background,
+  },
+  optionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  optionChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+    borderColor: Palette.border,
+    backgroundColor: Palette.background,
+  },
+  optionChipSelected: {
+    backgroundColor: Palette.brand,
+    borderColor: Palette.brand,
+  },
+  optionChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Palette.textSecondary,
+  },
+  optionChipTextSelected: {
+    color: '#FFFFFF',
+  },
+  saveButton: {
+    height: 52,
+    borderRadius: Radius.pill,
+    backgroundColor: Palette.brand,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

@@ -1,66 +1,42 @@
-import OpenAI from "openai";
+import { runs, tasks } from '@trigger.dev/sdk';
 
-import { formulaPlan, isPlausible, planInputSchema } from "../../lib/plan";
+import { planInputSchema } from '@/lib/plan';
+// Type-only: importing the task instance would bundle it into the server.
+import type { generatePlan } from '../../../trigger/generate-plan';
 
 /**
- * Onboarding answers -> daily target plan.
- * Unauthenticated: runs during onboarding before the user signs up.
+ * `POST /api/plan` — onboarding answers → daily targets.
+ *
+ * Deliberately unauthenticated: it runs before the user has an account and
+ * writes nothing to the DB. `planInputSchema` is the whole trust boundary.
+ *
+ * The route triggers the `generate-plan` task and polls it rather than calling
+ * OpenAI inline, so the model call, its retry and the Mifflin-St Jeor fallback
+ * all live in one place (`trigger/generate-plan.ts`) and show up in the
+ * Trigger.dev dashboard. The task never throws, so this poll always settles.
  */
 export async function POST(request: Request) {
-  const json = await request.json().catch(() => null);
-  const parsed = planInputSchema.safeParse(json);
+  const parsed = planInputSchema.safeParse(await request.json().catch(() => null));
 
   if (!parsed.success) {
     return Response.json(
-      { error: "Invalid onboarding answers", issues: parsed.error.issues },
+      { error: 'Invalid onboarding answers', issues: parsed.error.issues },
       { status: 400 }
     );
   }
 
-  const input = parsed.data;
-  const apiKey = process.env.OPENAI_API_KEY ?? process.env.OPEN_AI_KEY;
+  try {
+    const handle = await tasks.trigger<typeof generatePlan>('generate-plan', parsed.data);
+    const run = await runs.poll(handle, { pollIntervalMs: 500 });
 
-  if (apiKey) {
-    try {
-      const openai = new OpenAI({ apiKey });
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are a clinical nutritionist building daily nutrition targets. Calculate daily calories, protein_g, carbs_g, fat_g, and a short rationale sentence based on user metrics and goal. Return ONLY valid JSON with keys: calories (number), protein (number), carbs (number), fat (number), rationale (string).",
-          },
-          {
-            role: "user",
-            content: JSON.stringify(input),
-          },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.2,
-      });
-
-      const content = response.choices[0]?.message?.content;
-      if (content) {
-        const out = JSON.parse(content);
-        const plan = {
-          calories: Math.round(Number(out.calories)),
-          protein: Math.round(Number(out.protein ?? out.protein_g)),
-          carbs: Math.round(Number(out.carbs ?? out.carbs_g)),
-          fat: Math.round(Number(out.fat ?? out.fat_g)),
-          rationale: out.rationale || "Calculated using AI personalized metabolic profiling.",
-        };
-
-        if (isPlausible(plan)) {
-          return Response.json({ ...plan, source: "ai" });
-        }
-      }
-    } catch (err) {
-      console.warn("[plan] OpenAI plan calculation failed, using formula fallback:", err);
+    if (run.status !== 'COMPLETED' || !run.output) {
+      console.error('[plan] generate-plan did not complete:', run.status, run.error);
+      return Response.json({ error: 'Could not build your plan' }, { status: 502 });
     }
-  }
 
-  // Formula fallback (Mifflin-St Jeor)
-  const plan = formulaPlan(input);
-  return Response.json({ ...plan, source: "formula" });
+    return Response.json(run.output);
+  } catch (error) {
+    console.error('[plan] Could not reach Trigger.dev:', error);
+    return Response.json({ error: 'Could not build your plan' }, { status: 502 });
+  }
 }

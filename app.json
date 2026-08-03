@@ -19,6 +19,9 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
       "package": "com.anonymous.CalorieAI"
     },
     "web": {
@@ -39,7 +42,19 @@
       "expo-secure-store",
       "expo-web-browser",
       "@clerk/expo",
-      "@sentry/react-native"
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Calora uses the camera to read the calories and macros in your meal."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Calora reads the calories and macros from meal photos you pick."
+        }
+      ],
+      "@sentry/react-native/expo"
     ],
     "experiments": {
       "typedRoutes": true,

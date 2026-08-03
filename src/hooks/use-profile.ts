@@ -67,8 +67,11 @@ export function useProfile() {
 
       if (!response.ok) return;
 
-      const data = (await response.json().catch(() => null)) as { profile: Profile | null } | null;
-      if (data) setProfile(data.profile ?? null);
+      const rawData = await response.json().catch(() => null);
+      if (rawData) {
+        const parsedProfile = (typeof rawData === 'object' && 'profile' in rawData ? rawData.profile : rawData) as Profile | null;
+        setProfile(parsedProfile);
+      }
     } catch (err) {
       console.warn('[use-profile] Failed to load profile:', err);
       setError(err instanceof Error ? err.message : 'Failed to load profile');
@@ -117,8 +120,11 @@ export function useProfile() {
           return;
         }
 
-        const data = (await response.json().catch(() => null)) as { profile: Profile | null } | null;
-        if (!isCancelled && data) setProfile(data.profile ?? null);
+        const rawData = await response.json().catch(() => null);
+        if (!isCancelled && rawData) {
+          const parsedProfile = (typeof rawData === 'object' && 'profile' in rawData ? rawData.profile : rawData) as Profile | null;
+          setProfile(parsedProfile);
+        }
       } catch (err) {
         console.warn('[use-profile] Failed to load profile:', err);
         if (!isCancelled) setError(err instanceof Error ? err.message : 'Failed to load profile');

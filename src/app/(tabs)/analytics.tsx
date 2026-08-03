@@ -319,6 +319,7 @@ const styles = StyleSheet.create({
   header: {
     gap: 2,
     marginBottom: 4,
+    paddingHorizontal: 4,
   },
   pageTitle: {
     fontSize: 30,

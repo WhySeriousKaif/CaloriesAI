@@ -13,11 +13,13 @@ const STORAGE_KEY = "calora.onboarding.pending";
  */
 export type PendingOnboarding = {
   gender: "male" | "female";
+  dateOfBirth?: string;
   heightCm: number;
   weightKg: number;
   goal: "lose" | "maintain" | "gain";
   targetWeightKg: number;
   activityLevel: string;
+  paceKgPerWeek?: number;
   dietPreference: string;
   /** Display preference only — storage is always metric. */
   unitPreference: "metric" | "imperial";
@@ -28,6 +30,13 @@ export type PendingOnboarding = {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  plan?: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    rationale?: string;
+  };
 };
 
 export async function savePendingOnboarding(answers: PendingOnboarding) {

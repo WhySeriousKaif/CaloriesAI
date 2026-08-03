@@ -1,10 +1,12 @@
 import { useAuth } from '@clerk/expo';
+import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
 import {
   clearPendingOnboarding,
   readPendingOnboarding,
 } from '@/lib/onboarding-storage';
+import { useProfile } from '@/hooks/use-profile';
 
 /**
  * Flushes the parked onboarding answers to `POST /api/profile` once Clerk has a
@@ -17,6 +19,8 @@ import {
  */
 export function ProfileSync() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { reload } = useProfile();
+  const router = useRouter();
   const inFlight = useRef(false);
 
   useEffect(() => {
@@ -58,6 +62,8 @@ export function ProfileSync() {
 
         await clearPendingOnboarding();
         console.log('[profile-sync] Onboarding profile successfully synced to Neon DB.');
+        await reload();
+        router.replace('/(tabs)');
       } catch (error) {
         console.error('[profile-sync] Sync failed:', error);
       } finally {
@@ -66,7 +72,7 @@ export function ProfileSync() {
         }
       }
     })();
-  }, [isLoaded, isSignedIn, getToken]);
+  }, [isLoaded, isSignedIn, getToken, reload, router]);
 
   return null;
 }

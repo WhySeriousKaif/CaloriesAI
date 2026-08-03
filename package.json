@@ -48,6 +48,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@trigger.dev/build": "^4.5.9",
     "@types/react": "~19.2.2",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.0.0",

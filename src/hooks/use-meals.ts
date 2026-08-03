@@ -51,53 +51,18 @@ export function useMeals(date?: string) {
   }, [isLoaded, isSignedIn, getToken, date]);
 
   useEffect(() => {
-    let isCancelled = false;
+    void fetchMeals();
+  }, [fetchMeals]);
 
-    async function load() {
-      if (!isLoaded || !isSignedIn) {
-        if (!isCancelled) setLoading(false);
-        return;
-      }
-      try {
-        const token = await getToken();
-        if (!token || isCancelled) return;
-
-        const url = date ? `/api/meals?date=${encodeURIComponent(date)}` : '/api/meals';
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch((err) => {
-          console.warn('[use-meals] Fetch network error:', err);
-          return null;
-        });
-
-        if (!res || !res.ok || isCancelled) return;
-        const data = await res.json().catch(() => null);
-        if (!isCancelled && data) {
-          setMeals(data.meals || (Array.isArray(data) ? data : []));
-        }
-      } catch (err) {
-        if (!isCancelled) setError(err instanceof Error ? err.message : 'Error');
-      } finally {
-        if (!isCancelled) setLoading(false);
-      }
-    }
-
-    void load();
-
-    // Poll every 3 seconds if any meal is currently analyzing
-    let intervalId: ReturnType<typeof setInterval> | null = null;
-    const hasAnalyzing = meals.some((m) => m.status === 'analyzing');
-    if (hasAnalyzing) {
-      intervalId = setInterval(() => {
-        void load();
-      }, 3000);
-    }
-
-    return () => {
-      isCancelled = true;
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [isLoaded, isSignedIn, getToken, date, meals]);
+  // Poll every 3 seconds if any meal is currently analyzing
+  const hasAnalyzing = meals.some((m) => m.status === 'analyzing');
+  useEffect(() => {
+    if (!hasAnalyzing) return;
+    const intervalId = setInterval(() => {
+      void fetchMeals();
+    }, 3000);
+    return () => clearInterval(intervalId);
+  }, [hasAnalyzing, fetchMeals]);
 
   const logMeal = useCallback(
     async (mealData: Partial<MealItem> & { image?: string }) => {

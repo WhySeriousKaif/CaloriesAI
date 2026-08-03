@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import {
   Calendar,
@@ -10,7 +10,7 @@ import {
   Utensils,
   X,
 } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -76,6 +76,12 @@ export default function HistoryScreen() {
   const { meals, loading, reload } = useMeals();
   const [search, setSearch] = useState('');
   const [selectedMeal, setSelectedMeal] = useState<MealItem | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      void reload();
+    }, [reload])
+  );
 
   // Filter and group meals by day
   const filteredMeals = useMemo(() => {
@@ -337,6 +343,7 @@ const styles = StyleSheet.create({
   header: {
     gap: 2,
     marginBottom: 4,
+    paddingHorizontal: 4,
   },
   pageTitle: {
     fontSize: 30,

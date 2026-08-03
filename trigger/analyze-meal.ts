@@ -1,94 +1,121 @@
-import { logger, task } from "@trigger.dev/sdk";
+import { logger, schemaTask } from "@trigger.dev/sdk";
 import { eq } from "drizzle-orm";
 import OpenAI from "openai";
+import { zodTextFormat } from "openai/helpers/zod";
+import { z } from "zod";
 
-import { db } from "../db";
-import { meals } from "../db/schema";
+// Relative, not "@/" — these tasks are bundled by Trigger.dev, not Metro.
+import { db, meals } from "../db";
+import { visionUrl } from "../src/lib/image-url";
 
-const SYSTEM_PROMPT = `You are a clinical nutritionist AI estimating real food metrics from photos. Observe portion sizes, fried items (like Bhatura, Puri, Samosa), gravies, curries, rice, and meats. Estimate accurate calories, protein, carbs, and fat grams.
+const MODEL = "gpt-4o-mini"; // vision-capable, pinned here and nowhere else
+
+const SYSTEM_PROMPT = `You are a clinical nutritionist estimating what is on a plate from a single photo.
 
 Rules:
-- is_food: boolean. Return false if the photo does NOT contain edible food or drink.
-- name: string (2-4 words name of the meal, e.g. "Chole Bhature", "Grilled Chicken Bowl").
-- calories: integer (estimated total calories).
-- protein_g: integer (grams of protein).
-- carbs_g: integer (grams of carbohydrates).
-- fat_g: integer (grams of fat).
+- is_food is false for anything that is not edible food or drink. When it is false, the other fields are ignored — return zeros and an empty name.
+- name: what a person would call this meal, 2-4 words, no brand names. e.g. "Grilled chicken salad", "Chole Bhature".
+- Estimate the portion actually visible, using the plate, cutlery or hand for scale. Do not return a generic per-100g figure.
+- Account for how the food was cooked: fried items (bhatura, puri, samosa), oil-heavy gravies and curries, and rich sauces carry far more fat than they look.
+- protein_g * 4 + carbs_g * 4 + fat_g * 9 should land within 10% of calories.`;
 
-Return ONLY valid JSON with keys: is_food (boolean), name (string), calories (number), protein_g (number), carbs_g (number), fat_g (number).`;
+/** Snake_case because that is how the model is asked to name them. */
+const visionSchema = z.object({
+  is_food: z.boolean(),
+  name: z.string(),
+  calories: z.number().int(),
+  protein_g: z.number().int(),
+  carbs_g: z.number().int(),
+  fat_g: z.number().int(),
+});
 
-export const analyzeMeal = task({
+const payloadSchema = z.object({
+  mealId: z.string().uuid(),
+  imageUrl: z.string().url(),
+});
+
+/**
+ * Meal photo → macros, written back to the `meals` row.
+ *
+ * The row already exists as `analyzing` when this starts (POST /api/meals), so
+ * every exit has to move it to `completed` or `failed` — a row left `analyzing`
+ * is a spinner on Home forever.
+ *
+ * `onFailure` covers exhausted retries but not CRASHED / SYSTEM_FAILURE runs.
+ * Sweep stale `analyzing` rows with a scheduled task if that ever shows up.
+ */
+export const analyzeMeal = schemaTask({
   id: "analyze-meal",
-  run: async (payload: { mealId: string; imageUrl: string }) => {
-    const { mealId, imageUrl } = payload;
-    logger.info("Analyzing meal photo", { mealId, imageUrl });
+  schema: payloadSchema,
+  retry: { maxAttempts: 2 }, // one transient/parse retry, then failed
+  maxDuration: 120,
+  run: async ({ mealId, imageUrl }) => {
+    const apiKey = process.env.OPENAI_API_KEY ?? process.env.OPEN_AI_KEY;
+    if (!apiKey) throw new Error("Add OPENAI_API_KEY to your .env file");
 
-    const apiKey = process.env.OPEN_AI_KEY ?? process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error("OPENAI_API_KEY is missing");
-    }
+    // Constructed per call so a missing key fails inside the run, not at import.
+    const openai = new OpenAI({ apiKey, timeout: 45_000, maxRetries: 0 });
 
-    const openai = new OpenAI({ apiKey });
+    const response = await openai.responses.parse({
+      model: MODEL,
+      input: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            // The row keeps the full-size URL for the UI; the model gets a
+            // downscaled copy, because it downsamples anyway and the extra
+            // pixels are pure upload latency and tokens.
+            { type: "input_image", image_url: visionUrl(imageUrl), detail: "auto" },
+          ],
+        },
+      ],
+      text: { format: zodTextFormat(visionSchema, "meal") },
+    });
 
-    try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "Identify this food dish and estimate its exact calories and macros:" },
-              { type: "image_url", image_url: { url: imageUrl } },
-            ],
-          },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.2,
-      });
+    const out = response.output_parsed;
+    if (!out) throw new Error("OpenAI returned no structured output"); // retried once
 
-      const content = response.choices[0]?.message?.content;
-      if (!content) throw new Error("No response from OpenAI Vision");
-
-      const parsed = JSON.parse(content);
-
-      if (parsed.is_food === false) {
-        logger.warn("Photo is not food, marking meal failed", { mealId });
-        await db
-          .update(meals)
-          .set({ status: "failed", name: "Not Food Item" })
-          .where(eq(meals.id, mealId));
-        return { status: "failed", reason: "not_food" };
-      }
-
-      const name = parsed.name || "Scanned Meal";
-      const proteinG = Math.max(0, Math.round(Number(parsed.protein_g ?? parsed.proteinG ?? parsed.protein ?? 0)));
-      const carbsG = Math.max(0, Math.round(Number(parsed.carbs_g ?? parsed.carbsG ?? parsed.carbs ?? 0)));
-      const fatG = Math.max(0, Math.round(Number(parsed.fat_g ?? parsed.fatG ?? parsed.fat ?? 0)));
-      const calories = Math.max(
-        10,
-        Math.round(Number(parsed.calories || proteinG * 4 + carbsG * 4 + fatG * 9))
-      );
-
-      const result = {
-        name,
-        calories,
-        proteinG,
-        carbsG,
-        fatG,
-        status: "completed",
-      };
-
-      await db.update(meals).set(result).where(eq(meals.id, mealId));
-
-      return result;
-    } catch (err) {
-      logger.error("Vision analysis failed", { mealId, error: String(err) });
+    // A photo of a chair is not a meal that failed — it is not a meal. The row
+    // is kept and flagged so the card can say exactly that, and the totals skip
+    // it because only `completed` rows are summed.
+    if (!out.is_food) {
+      logger.warn("Photo is not food", { mealId });
       await db
         .update(meals)
-        .set({ status: "failed" })
+        .set({ status: "failed", errorReason: "not_food", name: null })
         .where(eq(meals.id, mealId));
-      throw err;
+
+      return { status: "failed" as const, errorReason: "not_food" as const };
     }
+
+    const clamp = (value: number) => Math.max(0, Math.round(value));
+    const result = {
+      name: out.name || "Scanned meal",
+      calories: clamp(out.calories),
+      proteinG: clamp(out.protein_g),
+      carbsG: clamp(out.carbs_g),
+      fatG: clamp(out.fat_g),
+    };
+
+    await db
+      .update(meals)
+      .set({ ...result, status: "completed", errorReason: null })
+      .where(eq(meals.id, mealId));
+
+    // Returned as well as written: the scan screen renders straight off the
+    // Realtime run output, so it never re-fetches the row it just created.
+    return { status: "completed" as const, ...result };
+  },
+  onFailure: async ({ payload, error }) => {
+    logger.error("analyze-meal exhausted retries", {
+      mealId: payload.mealId,
+      error: String(error),
+    });
+
+    await db
+      .update(meals)
+      .set({ status: "failed", errorReason: "analysis_failed" })
+      .where(eq(meals.id, payload.mealId));
   },
 });
