@@ -19,9 +19,7 @@ export async function getAuthUserId(request: Request) {
     const { sub } = await verifyToken(token, { secretKey });
     return sub;
   } catch (error: any) {
-    if (error?.reason === 'token-expired') {
-      console.warn('[server-auth] Clerk session token expired');
-    } else {
+    if (error?.reason !== 'token-expired') {
       console.error('Clerk token verification failed:', error);
     }
     return null;
