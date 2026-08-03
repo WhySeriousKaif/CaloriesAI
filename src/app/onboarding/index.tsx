@@ -6,12 +6,15 @@ import {
   ArrowRight,
   Bell,
   Camera,
+  Droplet,
+  Drumstick,
   Dumbbell,
   Egg,
   Flame,
   Footprints,
   Leaf,
   Scale,
+  Sparkles,
   Sprout,
   Target,
   TrendingDown,
@@ -19,6 +22,7 @@ import {
   User,
   UserCheck,
   Utensils,
+  Wheat,
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
@@ -705,17 +709,23 @@ export default function OnboardingScreen() {
               {/* Macro Distribution Cards */}
               <View style={styles.macroRow}>
                 <View style={styles.macroCard}>
-                  <Text style={styles.macroEmoji}>🍗</Text>
+                  <View style={[styles.macroIconBadge, { backgroundColor: '#E4EFE8' }]}>
+                    <Drumstick size={20} color="#1A5D42" strokeWidth={2.2} />
+                  </View>
                   <Text style={styles.macroVal}>{calculatedPlan.proteinG}g</Text>
                   <Text style={styles.macroLabel}>Protein</Text>
                 </View>
                 <View style={styles.macroCard}>
-                  <Text style={styles.macroEmoji}>🌾</Text>
+                  <View style={[styles.macroIconBadge, { backgroundColor: '#FDF0D5' }]}>
+                    <Wheat size={20} color="#F5A623" strokeWidth={2.2} />
+                  </View>
                   <Text style={styles.macroVal}>{calculatedPlan.carbsG}g</Text>
                   <Text style={styles.macroLabel}>Carbs</Text>
                 </View>
                 <View style={styles.macroCard}>
-                  <Text style={styles.macroEmoji}>🥑</Text>
+                  <View style={[styles.macroIconBadge, { backgroundColor: '#EDE7FB' }]}>
+                    <Droplet size={20} color="#8B5CF6" strokeWidth={2.2} />
+                  </View>
                   <Text style={styles.macroVal}>{calculatedPlan.fatG}g</Text>
                   <Text style={styles.macroLabel}>Fat</Text>
                 </View>
@@ -724,7 +734,9 @@ export default function OnboardingScreen() {
 
             {/* Insight Banner */}
             <View style={styles.insightCard}>
-              <Text style={styles.insightSparkle}>✨</Text>
+              <View style={styles.starBadge}>
+                <Sparkles size={22} color="#F59E0B" strokeWidth={2.2} fill="#FEF3C7" />
+              </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.insightTitle}>This is just the beginning!</Text>
                 <Text style={styles.insightSub}>
@@ -1029,9 +1041,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 12,
     alignItems: 'center',
+    gap: 4,
   },
-  macroEmoji: {
-    fontSize: 20,
+  macroIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 4,
   },
   macroVal: {
@@ -1043,7 +1060,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#4B5563',
-    marginTop: 2,
   },
   insightCard: {
     flexDirection: 'row',
@@ -1055,8 +1071,13 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
   },
-  insightSparkle: {
-    fontSize: 22,
+  starBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   insightTitle: {
     fontSize: 15,

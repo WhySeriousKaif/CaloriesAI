@@ -4,12 +4,19 @@ import { StyleSheet, View } from 'react-native';
 
 import AppTabs from '@/components/app-tabs';
 import { Palette } from '@/constants/design';
+import { useProfile } from '@/hooks/use-profile';
 
 export default function TabsLayout() {
   const { isLoaded, isSignedIn } = useAuth();
+  const { profile, loading } = useProfile();
 
-  if (!isLoaded) return null;
+  if (!isLoaded || loading) return null;
   if (!isSignedIn) return <Redirect href="/(auth)/sign-in" />;
+
+  // Mandate onboarding for all users who haven't completed onboarding yet
+  if (!profile || !profile.onboardingCompletedAt) {
+    return <Redirect href="/onboarding" />;
+  }
 
   return (
     <View style={styles.container}>

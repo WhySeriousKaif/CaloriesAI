@@ -13,7 +13,7 @@ import {
   Target,
   User as UserIcon,
 } from 'lucide-react-native';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -62,18 +62,13 @@ export default function ProfileScreen() {
   const formatWeight = (kg: number | null) =>
     kg ? (isImperial ? `${Math.round(kg * 2.20462)} lb` : `${kg} kg`) : '—';
 
-  const handleSignOut = () => {
-    const confirmed = () => {
-      void signOut().then(() => router.replace('/'));
-    };
-
-    // `Alert` is a no-op on web, so fall through to signing out directly there.
-    if (typeof Alert.alert !== 'function') return confirmed();
-
-    Alert.alert('Sign out', 'You can sign back in at any time.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: confirmed },
-    ]);
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.replace('/(auth)/sign-in');
+    } catch (err) {
+      console.error('[profile] Sign out error:', err);
+    }
   };
 
   return (
