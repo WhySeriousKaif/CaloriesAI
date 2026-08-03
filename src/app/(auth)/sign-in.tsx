@@ -1,9 +1,9 @@
-import { useSSO } from '@clerk/expo';
+import { useAuth, useClerk, useSSO } from '@clerk/expo';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeft, ShieldCheck } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -15,8 +15,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 
 import { AppleMark, GoogleMark } from '@/components/auth/BrandMarks';
+
+WebBrowser.maybeCompleteAuthSession();
 
 type Provider = 'google' | 'apple';
 
@@ -28,6 +31,8 @@ const STRATEGY = {
 export default function SignInScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const clerk = useClerk();
+  const { isLoaded, isSignedIn } = useAuth();
   const { startSSOFlow } = useSSO();
 
   // Pushed as `/(auth)/sign-in?intent=signup` at the end of onboarding, so the
@@ -38,6 +43,21 @@ export default function SignInScreen() {
   const [pending, setPending] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace('/(tabs)');
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      void WebBrowser.warmUpAsync();
+      return () => {
+        void WebBrowser.coolDownAsync();
+      };
+    }
+  }, []);
+
   const onContinue = useCallback(
     async (provider: Provider) => {
       if (pending) return;
@@ -47,34 +67,59 @@ export default function SignInScreen() {
 
       try {
         const redirectUrl = AuthSession.makeRedirectUri({ path: 'sso-callback' });
-        const { createdSessionId, setActive, signUp } = await startSSOFlow({
-          strategy: STRATEGY[provider],
-          redirectUrl,
-        });
 
-        if (createdSessionId && setActive) {
-          // The `(auth)` layout guard redirects into the app the moment this
-          // resolves — no imperative navigation needed here.
-          await setActive({ session: createdSessionId });
-          return;
-        }
+        if (Platform.OS === 'web') {
+          if (!clerk?.client) {
+            setError('Authentication service is loading. Please try again.');
+            setPending(null);
+            return;
+          }
 
-        if (signUp?.status === 'missing_requirements') {
-          setError(
-            'We need a little more information to finish creating your account.'
-          );
-          return;
+          await clerk.client.signIn.create({
+            strategy: STRATEGY[provider],
+            redirectUrl,
+          });
+
+          const externalUrl =
+            clerk.client.signIn.firstFactorVerification?.externalVerificationRedirectURL;
+          if (externalUrl) {
+            window.location.href = externalUrl.toString();
+            return;
+          }
+        } else {
+          const { createdSessionId, setActive, signUp } = await startSSOFlow({
+            strategy: STRATEGY[provider],
+            redirectUrl,
+          });
+
+          if (createdSessionId && setActive) {
+            await setActive({ session: createdSessionId });
+            router.replace('/(tabs)');
+            return;
+          }
+
+          if (signUp?.status === 'missing_requirements') {
+            setError(
+              'We need a little more information to finish creating your account.'
+            );
+            return;
+          }
         }
 
         // No session and no missing requirements means the user backed out.
-      } catch (err) {
+      } catch (err: any) {
         console.error('SSO error:', JSON.stringify(err, null, 2));
-        setError('Something went wrong. Please try again.');
+        const clerkMessage =
+          err?.errors?.[0]?.longMessage ??
+          err?.errors?.[0]?.message ??
+          err?.message ??
+          'Something went wrong. Please try again.';
+        setError(clerkMessage);
       } finally {
         setPending(null);
       }
     },
-    [pending, startSSOFlow]
+    [pending, clerk, startSSOFlow, router]
   );
 
   const appleButton = (
@@ -102,6 +147,8 @@ export default function SignInScreen() {
   return (
     <View style={styles.screen}>
       <StatusBar style="dark" />
+      {/* Clerk Smart CAPTCHA container required for custom auth flows when bot protection is active */}
+      <View nativeID="clerk-captcha" style={styles.captchaContainer} />
 
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         {router.canGoBack() ? (
@@ -354,5 +401,13 @@ const styles = StyleSheet.create({
   legalLink: {
     fontWeight: '700',
     color: '#4B5563',
+  },
+  captchaContainer: {
+    position: 'absolute',
+    top: -9999,
+    left: -9999,
+    width: 1,
+    height: 1,
+    opacity: 0,
   },
 });

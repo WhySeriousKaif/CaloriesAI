@@ -1,0 +1,140 @@
+{
+  "build": {
+  },
+  "cliPackageVersion": "4.5.9",
+  "config": {
+    "dirs": [
+      "./trigger"
+    ],
+    "project": "proj_ppqbucfdyrpvemtyqvow"
+  },
+  "configPath": "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger.config.mjs",
+  "contentHash": "3744e4ed22b0e3c4e7373fe68808baf9",
+  "customConditions": [
+  ],
+  "deploy": {
+    "env": {
+    }
+  },
+  "environment": "dev",
+  "externals": [
+    {
+      "name": "import-in-the-middle",
+      "version": "3.0.1"
+    }
+  ],
+  "files": [
+    {
+      "entry": "trigger/clerk-shared.ts",
+      "out": "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-shared.mjs"
+    },
+    {
+      "entry": "trigger/clerk-user-created.ts",
+      "out": "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-user-created.mjs"
+    },
+    {
+      "entry": "trigger/clerk-user-deleted.ts",
+      "out": "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-user-deleted.mjs"
+    },
+    {
+      "entry": "trigger/clerk-user-updated.ts",
+      "out": "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-user-updated.mjs"
+    }
+  ],
+  "indexWorkerEntryPoint": "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/.npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-index-worker.mjs",
+  "otelImportHook": {
+    "include": [
+    ]
+  },
+  "outputHashes": {
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/.npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-index-worker.mjs": "z49a1TDCMsY",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/.npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-index-worker.mjs.map": "6+WHvCQ/GJ0",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/.npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-run-worker.mjs": "czpbckr9Aag",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/.npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-run-worker.mjs.map": "bS8K8Bfsr8A",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger.config.mjs": "KbJkIcw+Iu4",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger.config.mjs.map": "KoasM9VzlSU",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-shared.mjs": "JhQcUw+nwvA",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-shared.mjs.map": "0b4tlwmkM3g",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-user-created.mjs": "zlwY1ifWR3o",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-user-created.mjs.map": "cQv7pqWREZk",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-user-deleted.mjs": "cBRAkq+TFX4",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-user-deleted.mjs.map": "YLPTqVjNEpU",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-user-updated.mjs": "QuxZtX3/jv0",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/Desktop/CalorieAI/trigger/clerk-user-updated.mjs.map": "UKddFIsB7Hk",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-36EFRG2W.mjs": "HnYPlIeewTI",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-36EFRG2W.mjs.map": "Cdd7lOcYAqc",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-DYPPKBKF.mjs": "pvCpJFmvjtI",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-DYPPKBKF.mjs.map": "czlWHsE0VS8",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-FUV6SSYK.mjs": "Mad/q9MtDLc",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-FUV6SSYK.mjs.map": "9IFojZihDyA",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-IPPRG6ZZ.mjs": "unx8Qnlx0MQ",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-IPPRG6ZZ.mjs.map": "w3Vbf/Vbk8g",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-JXNTT3N2.mjs": "ixqrUDRh8TQ",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-JXNTT3N2.mjs.map": "tMurt0vq5Xc",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-THI7QYEM.mjs": "wWOCyUwHpS0",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-THI7QYEM.mjs.map": "JvXr8vg3Zko",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-UCERAFZY.mjs": "Cnmn1ejqJAA",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-UCERAFZY.mjs.map": "OTMdsmhYmvo",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-V2W36AKK.mjs": "Ox9W6XBqROs",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-V2W36AKK.mjs.map": "BAzR5NZnhL4",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-WZGQJWAS.mjs": "Y9pY3LOEHVY",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/chunk-WZGQJWAS.mjs.map": "LMPzUuAiOIM",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/crypto.node-5HPPZ5PO.mjs": "Hosiis4RK5g",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/crypto.node-5HPPZ5PO.mjs.map": "f+DirqJ/vQY",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/crypto.node-OZIG7C7V.mjs": "xL7AWEo5LhA",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/crypto.node-OZIG7C7V.mjs.map": "0b4tlwmkM3g",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/esm-HF64XN43.mjs": "/ASyNSMg03k",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/esm-HF64XN43.mjs.map": "CYqZQcavdAI",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/esm-UJZXZXFH.mjs": "vyj8FKrApaI",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/esm-UJZXZXFH.mjs.map": "VON93E1In1A",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/getMachineId-bsd-S4WYBVIH.mjs": "GCnPqb4NaeA",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/getMachineId-bsd-S4WYBVIH.mjs.map": "7EClISaaDPE",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/getMachineId-darwin-RVUCSMDI.mjs": "4hxefO8GoBU",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/getMachineId-darwin-RVUCSMDI.mjs.map": "nsP5FAkisV4",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/getMachineId-linux-S43F7JYT.mjs": "Ii8PEt16C+A",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/getMachineId-linux-S43F7JYT.mjs.map": "2USKy6IttvU",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/getMachineId-unsupported-QDBTROBM.mjs": "nc1J0NOC80s",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/getMachineId-unsupported-QDBTROBM.mjs.map": "vvqauAfGBvU",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/getMachineId-win-MCJWH43T.mjs": "n+vXopBCsQM",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/getMachineId-win-MCJWH43T.mjs.map": "JyLezxgEka0",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/s2s-HEFV57TL.mjs": "D/4t79/KtKI",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/s2s-HEFV57TL.mjs.map": "BrWFGTrMb1s",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/s2s-XVG3XBAD.mjs": "vm/c23hJSE0",
+    "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/s2s-XVG3XBAD.mjs.map": "LI8DY+w+d6Y"
+  },
+  "outputPath": "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251",
+  "packageVersion": "4.5.9",
+  "runWorkerEntryPoint": "/Users/mdkaif/Desktop/CalorieAI/.trigger/tmp/build-ZDB251/.npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-run-worker.mjs",
+  "runtime": "node",
+  "sources": {
+    "package.json": {
+      "contentHash": "a36a4790b48d9096e02238e7aaf9d97d",
+      "contents": "eJx1Vcly4yAQvfsrKJ8HtHhJ7NMc5jtShaAtE0ugopEcJ5V8+xQIbSnrSL9H09trvjaEbDWvYXsmW8ErYxVwtf3jzTVX2pvhozHUmtaBTUA7++jhDiwqExgZS1naWyU0oCVooQC3Z/K1IYSQ7V9Rgb0lBRc30NJfedux7BAvTQT/VED3LJ+B3py0yiM/hxeWstcR0mC05I4XHCFBsB3YChCDk4xlMycWuHBUc6c6oBwfWlB0xvISksXJX80XzzuryhIsk9AlKG8xwAM7DQxp1ednBdTYOoAp2x9YPqBDUn3op7mZ8tZdKQIOlew5hwVHGI2Oa4dP8g8ECR0VlQLtJkaW/qYoATN4gV7M4uoCKyuOSOFyAbHKUXWs2zOwUvqmdDnB+wXcD9ZafRBEayG0ZvUBbCqOV4rCAqwWER13LdKC21U3j7owFa7D6KCm8ylcdJjeoaCFNXecZzNSqlYoCXQ+hHFG89dp1HrgrqJGvAqOAxauBrWdWM52CzOVpl6DpsdS9nqcIlroQSBSpR1Y08QJ/v3ywCwBnW/JlWtZxVRztpvpZUG3wLWquYOQkVdN9pSH/AKUW+B+3B18xFljLyt++2733dqz/LhG68LgZQe/bfZPKXcogpeU5dmKl7uxtwp6AXppsWy7IeQ7Lrzu3/Od5x4NYDK27Sc0J/+9M27KxYrvsrlqsVK9KN9O43Yd7b5IF1XS5WoZK+u4qvwQibgId2zPslFYIS5hVdOHdWQp20359MgsD3TcuuEfIP1pLBKCo40173E5aCOBsCT6SBY4e8fhHtfSGiVHp7bV58EWKcrgAvbnCMWGTeEQGpo4KC3WLeDhMFS8OJegwXIX1DBrABntE7VW5TPmYJ6I6FqpzG9etE40cQVxe1KjYKeyYPVUn/jhnCV0/sbs/yHeNPaqsarrY3S2hc335j/GAC14"
+    },
+    "trigger.config.ts": {
+      "contentHash": "dc9d05e4c270c0fc06a3a4c6ff7c7d87",
+      "contents": "eJxljkFPwzAMhe/9FVZOIFVbYbfsAmKXSXDjhhDKGqcKNHHmumVj6n9HDS0S4mTre35+z4dELHABi85HfKDofAMjOKYA6k7YNw3yyuKw7uyH2hYFnrLDojN9K398V5cCIDG9Yy0a1LS9pXQ89LWzZ04DBjkfB/pUZQFgPXcaXtRqPYeo1wlzH8UH1KAiWcyXLTWPOGCrQbXUZBTMadezEU9Rw6aqshOFPXYaphYAGM2hRbuPOxw0ONN2WGZhbr7c5Wf3IhiSdBo25UJ9fPYBqZd9fOo03FQ/MbPjn/YrOlMLsYbbBbCJloL/Qg3C/dxinMZYFuP1tvgGR053IQ=="
+    },
+    "trigger/clerk-shared.ts": {
+      "contentHash": "09c24e9f253f6136923257c1c4f567bb",
+      "contents": "eJx9U0tu2zAQ3esUD9nUNhKp6wiuW7RZtIsmQNJVUcS0OLYY06TAGdkW0gA9RE/YkxSkZCdGPztjPHy/eTKbxgeBdA3hER/IkpC+XjxQJZ9urz+f4wtTiL/whGXwG5y9rSyFdbFQ1ZqcPiuzrJhMMkxwozrrlWYwOemX5zfXt3coVGOKHS1q79dcpOdziIfUBKkDEbhzFUTxmvMMCeyuJgTfCmFLwSwNcVq/3Zo92KyckjYQlNNx7FArp/uNoHZ4HylAW3ISsbQSBZagzKqWyOjbVX0O7hVsVNMYt+oFp5evGFyrhqJG3wbMW6bAcwS/i3DWbIlhHGivKrEdvCM0VlV02Vs6+Cgy2j+nm6BjmldR1xAWpnjMgGLSO05MeRVICek5imHQNrofNMOrZ615pEGyeHm8VfkSkrdmf2H0HDUpTQG/fvwEi1pYgqqCZ+5DDSTBEKdYjED7dmGJoRjKwWjaNF7IVR3W1A2kKeCP+jJma9yqzJ7K7O+Wh179z7TuV44e8+GKGxXWjHk04Bsx3ikL7zCsw6eq8kkMf7S4/JfYobk9E1PsEG0pdKCNMhZK60DMkS8eNuo8h/OCh5YljZpgNiqkCuTpGwi0pPDyrxJLZS3i53Lo/NIElpizSpDY1T51mjTaBjsjNZSLaK0byq8vFq1ceGe7oyYWYy1WJOlAvV4WH0ifVG/ZuiqmdpBzFRff9Rij09aMD9ngO1xrbTpS5R3L0eY0JZwntvtBCfEsXxqnRxkAjIbpGNM3B6250ZhOh7cD1P0Jxr3RGTAuswyxiG1wGB04Z7N/kH59/W08Ox3H5Si9zJ6y312Qp6Q="
+    },
+    "trigger/clerk-user-created.ts": {
+      "contentHash": "4443b9bcdb0ba6a848d4b48ff9d25dbc",
+      "contents": "eJxtVMuO2zgQvOsran2SDUW6e+BFkpkcckqATE5BENNiyyKGIoUmNYphGMhH7BfulwRNyY/J5CSI3ayurq6m6XrPEUdYv98TF4gqPOGEhn2HxdvIRo5LTc9V0E+Luywz5xt6d8kry0rvFnfX2BCIw8twFeqWOnWb1bPpFB8+dMrYd1ozhVAgHnrCvSV++hqIPzyTi5/VwXqlr3hVLfE3oVVMWkhVq1WGFbZSt6yZVCS9xf+//sP0g9gSrK+VBfsRjWco7Fg5DUfjVC6RLjMkpMfWBJgA5bBaDX0gjqtVAeejHBknByW2nz99eUSlelP17BtjaYuRTaSQCgbVkdQTwMRcDlXfp2/nO3IR3u28Ym3cHo1xJrQUCggvyRlp13r/lIiEg6tb9s4PoRDA4EEmtsTwjlArByvXGsMhlnjvY4texTZgYg/vsE2y/ZA+fxi9La4YAuhZE6Nnr4f6toFg3N6mPko8+CRBMF1vTXNAFJmih0JvlbkIk2FVZfQzjbn2LkTU54HeT8PBJjktP2aA0WsspokKtTfz/BZFBvDg1lPvyPvJBuu/u2OJzb8QOMwlj9AqqgIkSR/FPRvMEHc3aSTuk9BrM+YCsLzLUva0IKVxjc8XXw6ulpHNVG8MtChmErj2/FGvE5fS6GKOzaTOv60KqfB6pvPPZgM3WDvFT2cOE+Nv7Mfv2ECNykTo3YxRTuLnafeW58NnZQcK+fHvbOZyp0u6d/feNdbU8cF/7bWKlJ/bAaLiPcX1tN3lDWBxSakqPLbJLFCWSekD6KcJolE+rwjS0ozeJYuxqmlZ4pOzBzA1TKHF2Kp4izip60cX0ko7eiZGbf1ul9x/WSDlwijvjucEvSdHnMbTW+XKC2KQHo5T6wWG1KV+F9fpKXiQlpc4nVu6SsMUB3bG7fNjsuykgoj4QtpX4lzH98JCV8tA7C1+nx9OQZFtMzdXp+KvEv6oLYcvKovRT0UmML8BxRbwIA=="
+    },
+    "trigger/clerk-user-deleted.ts": {
+      "contentHash": "c15e3e6547020a8eda3becac554b15ff",
+      "contents": "eJx1VNuO0zAUfM9XDBUS6SpN97lVEQh42BeEuIgHhKgbnzamjt21nWZLVYmP4Av5EuRLk+4u+xbZ58zMmTmOaHbaOBzxeqWN+8zs9mOr3hmjTQGpNxsyBRyzW5ywNrrB6JUzwh+XnPZTy7ejeSbOGHTbl3Ejfv2SNNGmGc2zoYSv+pKynPLVZXtrydj711Nb1dSwocoddoQj3kgy2y+WzFuS5Ih/YAepGR+ap5WvmNiaGeJewfTqKsMVlp6k5LFrib+//8DVFKjRMYt0A6EiRwGrwY3ehTKpKyZhdFdmiHANMWlL3/5D8CWExVKrhIKK2YpxWgYQV5Mw0VOO0IaNRidc7a8aj4gwjVAbME8CVzMHYdUL50sMeXgGpSd6V0BpB6ZAPqsZPu3FHQw5I8h6dOXhOi9BQdJGONEwR/IASxRGsayhs07XiYq8gGlGd8HmSivrUD1wGYuwC/kxAwSfYRRN9tNPknGjIgNMq2Zg9qAq5LuYzOypyMZYvIQHRCI9gjPHCtCelLvxkS6QQOZZqJtOI1hYBoulN55Z6J0TWjGJPgAOvfpJlbMlvgpX69ZBDFaesZR2tffcaWzpAK0KMMWDmQd/3gkpoWhPBjujeVsRtPJ2ARBr5M+83lLwcRoDcLVPT1H3+FXlqQRYxhku9zHOjOfHNPsJzBixJx7WxMtnCoIvE8Z4Hj5O0ZX4Wkuh1jof9Ys0kIwKHIdEb/gMSfeF1ePkcEyC96mzjgkHvkrESW8eHuz4fNh5X3O6jcflBVVxphr3xYZca5RQm/wYVin2iAsN3tqkoJSkNq7GYrHA9WBzmrhjRuWj93p4nVhr06sfHAiv/SJtrr0nfSD/9Sbd9qqAqNyvaSSYYc2kpSJQ+FbVSonT09lcCOofTfr7BeZ49u36+z07HtM6016wPmjz9Kci8+3/AJ6R6a0="
+    },
+    "trigger/clerk-user-updated.ts": {
+      "contentHash": "43e2aa697a8dc988be6e8ad690dd537f",
+      "contents": "eJxtVMtu2zAQvOsrpjrJgSLfZbhokOSQW4Ggp6JA1uJaIiKRxpKy4xoG+hH9wn5JQVHyI8lR3NE8OCvpbmPF44DW1jVLDk/uFUesxXZIv3nR4bhQvJ079ZoukkRPb6jVCVcUc7VKF+dZ71jc9XjuqoY7ukRtRHck+8eOdHunlLBzOfx+w7hvWV5/OJbHLRv/nfatJXXmm1dhfusaElbB1PzmJsENXoJu0W8UeVYv+PfnL3zDgxtUDZmaFZzt2Dfa1FEEdmccMi7qImC1gIOdWZFgoLxrnQUZ9BvH4gs8b/UblGUHYz3qnoSMZ4YVxaJNnYOMAr23UpEJbCSit4wVr60wtHcjrhKOuMwKaO1ZQFiTblnh5TRU3Ooty36Ww9lA5xvt0PXOY8WgVcvwFhE+BBe7g5BvWOAbMnC6ZePbPQZf4Q5+s9gAcyHvPOG3oZrKGudRTSX8iCmwHLYjOySAViXS2EIIcDsGTfMEkN6UILc3FbJNrK78vNEZll8R6DBKHqDIUw4OoKfQ+BIjxeICNlQURh8XKAsEs0UyoONSF9qsbZY+700VIo9Wx/qD+zQfTeCc+UmVg5dCq3ycjaamx4bcIFyOdr4slzB928b5cfIQHf8Uu/uFJWhH2kOtRo5Cm7BW2fC9zKbDLbU9u+zwuZtR7niCW3NvzbrVlX+wsapsigN4kpp9Gb/I4oIwP0FcmB8ibT5dz50vYXiHh0A3w3GCn2WFfS9Gmzo7DOsQFYLBK9sfhM9Xc1XPuQ6clmn8kwQasbtCX7wb1T8A3omHwyvpsEXHPAk0/wFYyaAo"
+    },
+    "tsconfig.json": {
+      "contentHash": "fe70175f872f6a9ae0062919e2c07213",
+      "contents": "eJxlj0sOwjAMRPc9heVlVJJ9V9yAAyAWJTEQqaRRbUpR1buj9MtnZc/4jTTuMwCkTig4xiKtsTbCtg4Xf9XnkgnzhNj6Hn1FzSGKr0NC+wwAAFkabwULkOZB+eTFUm4bAoB7o7CA4ywBUBturFE4O6d8I0tmEv4PrP6SGeeQAQxjQx9s9XC0xlApo7Qw5l+yW7SeXn1FYvODpsuOQqvdhxlK8S09fXDbKUs1hjesh1FA"
+    }
+  },
+  "target": "dev"
+}

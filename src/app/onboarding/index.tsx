@@ -38,6 +38,10 @@ import { WeightHeader } from '@/components/onboarding/illustrations/WeightHeader
 import { OnboardingHeader } from '@/components/onboarding/OnboardingHeader';
 import { OptionCard } from '@/components/onboarding/OptionCard';
 import { RulerPicker } from '@/components/onboarding/RulerPicker';
+import {
+  deviceTimezone,
+  savePendingOnboarding,
+} from '@/lib/onboarding-storage';
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
@@ -254,6 +258,25 @@ export default function OnboardingScreen() {
     if (step < 10) {
       setStep((s) => s + 1);
     } else {
+      // Park the answers before handing off to Clerk. The user has no account
+      // yet, so there is nowhere to persist them server-side — `<ProfileSync />`
+      // picks them up and POSTs them once a session exists.
+      void savePendingOnboarding({
+        gender,
+        heightCm,
+        weightKg,
+        goal,
+        targetWeightKg: goalWeightKg,
+        activityLevel,
+        dietPreference,
+        unitPreference: heightUnit === 'cm' ? 'metric' : 'imperial',
+        timezone: deviceTimezone(),
+        dailyCalories: calculatedPlan.calories,
+        proteinG: calculatedPlan.proteinG,
+        carbsG: calculatedPlan.carbsG,
+        fatG: calculatedPlan.fatG,
+      });
+
       router.push({
         pathname: '/(auth)/sign-in',
         params: { intent: 'signup' },

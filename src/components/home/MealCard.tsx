@@ -1,0 +1,264 @@
+import {
+  AlertTriangle,
+  ChevronRight,
+  Salad,
+  Sparkles,
+} from 'lucide-react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+
+import {
+  CardShadow,
+  Macro,
+  NumeralFont,
+  Palette,
+  Radius,
+} from '@/constants/design';
+import type { DemoMeal } from '@/lib/demo-meals';
+
+type MealCardProps = {
+  meal: DemoMeal;
+  onPress?: () => void;
+  onRetake?: () => void;
+};
+
+/**
+ * A single row in Today's Meals. Renders one of three states straight from
+ * `meal.status`, matching the `analyzing | completed | failed` lifecycle the
+ * `meals` table stores.
+ */
+export function MealCard({ meal, onPress, onRetake }: MealCardProps) {
+  if (meal.status === 'analyzing') return <AnalyzingCard />;
+  if (meal.status === 'failed') return <FailedCard onRetake={onRetake} />;
+
+  const accent = Macro[meal.accent];
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${meal.slot}, ${meal.name}, ${meal.calories} calories`}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+      {/* Placeholder tile until ImageKit URLs exist (PLAN.md Phase 4). */}
+      <View style={[styles.thumb, { backgroundColor: accent.tint }]}>
+        <Salad size={26} color={accent.color} strokeWidth={1.8} />
+      </View>
+
+      <View style={styles.middle}>
+        <Text style={styles.slot}>{meal.slot}</Text>
+        <Text style={styles.name} numberOfLines={1}>
+          {meal.name}
+        </Text>
+
+        <View style={styles.macroRow}>
+          <MacroDot color={Macro.protein.color} grams={meal.proteinG} />
+          <MacroDot color={Macro.carbs.color} grams={meal.carbsG} />
+          <MacroDot color={Macro.fat.color} grams={meal.fatG} />
+        </View>
+      </View>
+
+      <View style={styles.right}>
+        <View style={styles.kcalRow}>
+          <Text style={styles.kcal}>{meal.calories}</Text>
+          <Text style={styles.kcalUnit}> kcal</Text>
+        </View>
+        <Text style={styles.time}>{meal.loggedAt}</Text>
+      </View>
+
+      <ChevronRight size={18} color={Palette.textTertiary} strokeWidth={2} />
+    </Pressable>
+  );
+}
+
+function MacroDot({ color, grams }: { color: string; grams: number | null }) {
+  return (
+    <View style={styles.macroItem}>
+      <View style={[styles.dot, { backgroundColor: color }]} />
+      <Text style={styles.macroText}>{grams ?? 0}g</Text>
+    </View>
+  );
+}
+
+/** The optimistic card shown while `analyze-meal` runs. */
+function AnalyzingCard() {
+  return (
+    <View style={[styles.card, styles.analyzingCard]} accessibilityRole="progressbar">
+      <View style={[styles.thumb, styles.analyzingThumb]}>
+        <Sparkles size={24} color={Palette.brand} strokeWidth={2} />
+      </View>
+
+      <View style={styles.middle}>
+        <Text style={styles.analyzingTitle}>Analyzing your meal...</Text>
+        <Text style={styles.analyzingSub}>Our AI is identifying ingredients</Text>
+
+        <View style={styles.analyzingTrack}>
+          <View style={styles.analyzingFill} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+/** `analyze-meal` gave up — offer a retake rather than a dead row. */
+function FailedCard({ onRetake }: { onRetake?: () => void }) {
+  return (
+    <View style={[styles.card, styles.failedCard]}>
+      <View style={[styles.thumb, styles.failedThumb]}>
+        <AlertTriangle size={24} color={Palette.danger} strokeWidth={2} />
+      </View>
+
+      <View style={styles.middle}>
+        <Text style={styles.failedTitle}>Couldn&apos;t analyze this image</Text>
+        <Text style={styles.failedSub}>Try a clearer photo of your meal</Text>
+      </View>
+
+      <Pressable
+        onPress={onRetake}
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.retakeButton, pressed && styles.pressed]}>
+        <Text style={styles.retakeText}>Retake</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: Palette.card,
+    borderRadius: 24,
+    padding: 18,
+    ...CardShadow,
+  },
+  pressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.995 }],
+  },
+  thumb: {
+    width: 72,
+    height: 72,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  middle: {
+    flex: 1,
+    gap: 3,
+  },
+  slot: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Palette.text,
+    letterSpacing: -0.3,
+  },
+  name: {
+    fontSize: 15,
+    fontWeight: '400',
+    color: '#7B7B7B',
+  },
+  macroRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 5,
+  },
+  macroItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: Radius.pill,
+  },
+  macroText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Palette.textSecondary,
+  },
+  right: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  kcalRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  kcal: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#0B5E43',
+    fontFamily: NumeralFont,
+  },
+  kcalUnit: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0B5E43',
+  },
+  time: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: Palette.textSecondary,
+  },
+
+  analyzingCard: {
+    backgroundColor: Palette.brandTint,
+  },
+  analyzingThumb: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  analyzingTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Palette.brand,
+  },
+  analyzingSub: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: Palette.textSecondary,
+  },
+  analyzingTrack: {
+    height: 4,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  analyzingFill: {
+    height: '100%',
+    width: '55%',
+    borderRadius: Radius.pill,
+    backgroundColor: Palette.brand,
+  },
+
+  failedCard: {
+    backgroundColor: Palette.dangerTint,
+  },
+  failedThumb: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  failedTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Palette.text,
+  },
+  failedSub: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: Palette.textSecondary,
+  },
+  retakeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: Radius.pill,
+    borderWidth: 1.5,
+    borderColor: Palette.danger,
+    backgroundColor: Palette.card,
+  },
+  retakeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Palette.danger,
+  },
+});

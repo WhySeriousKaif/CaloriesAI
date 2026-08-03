@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../trigger/clerk-shared.ts"],
+  "sourcesContent": ["import type { DeletedObjectJSON, UserJSON } from \"@clerk/backend\";\n\n/**\n * Payloads sent from `POST /api/webhooks/clerk` to the three sync tasks.\n *\n * The route verifies the Svix signature and then hands the raw Clerk event\n * data straight through, so the mapping from Clerk's shape to our `users` row\n * lives in exactly one place: the tasks.\n */\nexport type ClerkUserEventPayload = {\n  /** The `user.created` / `user.updated` payload from Clerk. */\n  data: UserJSON;\n  /** The `svix-id` header — stable across Svix retries, so it doubles as an idempotency key. */\n  eventId: string;\n};\n\nexport type ClerkUserDeletedPayload = {\n  /** The `user.deleted` payload. Clerk marks `id` optional on deleted objects. */\n  data: DeletedObjectJSON;\n  eventId: string;\n};\n\n/**\n * Clerk sends every email address on the user, not just the primary one.\n * Prefer the primary; fall back to the first so a user who signed up with an\n * unverified-but-only address still gets an email stored.\n */\nexport function primaryEmailAddress(data: UserJSON): string | null {\n  const primary = data.email_addresses?.find(\n    (address) => address.id === data.primary_email_address_id\n  );\n\n  return (primary ?? data.email_addresses?.[0])?.email_address ?? null;\n}\n"],
+  "mappings": ";;;;;;AAAA;AA2BO,SAAS,oBAAoB,MAA+B;AACjE,QAAM,UAAU,KAAK,iBAAiB;AAAA,IACpC,CAAC,YAAY,QAAQ,OAAO,KAAK;AAAA,EACnC;AAEA,UAAQ,WAAW,KAAK,kBAAkB,CAAC,IAAI,iBAAiB;AAClE;AANgB;",
+  "names": []
+}
