@@ -1,4 +1,4 @@
-import { Droplet, Drumstick, Wheat } from 'lucide-react-native';
+import { Dumbbell, Droplet, Wheat } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -11,7 +11,7 @@ import {
 } from '@/constants/design';
 
 const ICONS = {
-  protein: Drumstick,
+  protein: Dumbbell,
   carbs: Wheat,
   fat: Droplet,
 } as const;

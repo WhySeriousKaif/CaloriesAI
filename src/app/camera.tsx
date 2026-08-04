@@ -449,7 +449,7 @@ export default function CameraScreen() {
           <Sparkles size={36} color="#10B981" />
           <Text style={styles.permissionTitle}>Camera Access Required</Text>
           <Text style={styles.permissionSub}>
-            CalorieAI needs access to your camera to scan meals and calculate calories & macros.
+            Calora needs access to your camera to scan meals and calculate calories & macros.
           </Text>
           <Pressable
             style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}

@@ -6,7 +6,7 @@ import { db, meals, users } from '../../../db';
 import { uploadToImageKit } from '@/lib/imagekit';
 import { getAuthUserId, unauthorized } from '@/lib/server-auth';
 
-const SYSTEM_PROMPT = `You are an expert clinical nutritionist and food recognition AI for CalorieAI. Analyze food photos accurately.
+const SYSTEM_PROMPT = `You are an expert clinical nutritionist and food recognition AI for Calora. Analyze food photos accurately.
 
 Return a valid JSON object with the following fields:
 - is_food (boolean)

@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "CalorieAI",
+    "name": "Calora",
     "slug": "CalorieAI",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "calorieai",
+    "scheme": "calora",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.anonymous.CalorieAI"
+      "bundleIdentifier": "com.anonymous.calora"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.anonymous.CalorieAI"
+      "package": "com.anonymous.calora"
     },
     "web": {
       "bundler": "metro",
@@ -73,6 +73,7 @@
       "eas": {
         "projectId": "06846c98-e0cd-4c94-93ab-1bcc7747dace"
       }
-    }
+    },
+    "owner": "kaiftruth101"
   }
 }

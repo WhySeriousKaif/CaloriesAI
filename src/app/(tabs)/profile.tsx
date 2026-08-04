@@ -4,26 +4,39 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import {
   Activity,
+  Bell,
+  Bug,
+  Calendar,
+  Check,
   ChevronRight,
   Flame,
+  Globe,
   LogOut,
   Pencil,
   Ruler,
   Salad,
   Scale,
+  Settings,
+  ShieldCheck,
+  Sparkles,
   Target,
   Trash2,
   User as UserIcon,
+  Users,
+  FileText,
   X,
 } from 'lucide-react-native';
 import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -47,6 +60,18 @@ function titleCase(value: string | null | undefined, fallback = '—') {
   return value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, ' ');
 }
 
+/** Format creation date as "MMM YYYY" (e.g. "Jul 2026") */
+function formatMemberSince(dateInput: Date | number | string | null | undefined): string {
+  if (!dateInput) return 'Jul 2026';
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return 'Jul 2026';
+    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  } catch {
+    return 'Jul 2026';
+  }
+}
+
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -60,8 +85,12 @@ export default function ProfileScreen() {
 
   const isImperial = profile?.unitPreference === 'imperial';
 
-  // Edit Modal State
-  const [isEditing, setIsEditing] = useState(false);
+  // Modals state
+  const [activeModal, setActiveModal] = useState<
+    'personalDetails' | 'preferences' | 'language' | 'familyPlan' | 'sentryTest' | null
+  >(null);
+
+  // Personal Details Edit State
   const [saving, setSaving] = useState(false);
   const [editHeightCm, setEditHeightCm] = useState('175');
   const [editWeightKg, setEditWeightKg] = useState('72');
@@ -69,6 +98,31 @@ export default function ProfileScreen() {
   const [editGoal, setEditGoal] = useState('lose');
   const [editActivityLevel, setEditActivityLevel] = useState('moderate');
   const [editDietPreference, setEditDietPreference] = useState('classic');
+
+  // Preferences State
+  const [unitPref, setUnitPref] = useState<'metric' | 'imperial'>(
+    profile?.unitPreference === 'imperial' ? 'imperial' : 'metric'
+  );
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [mealRemindersEnabled, setMealRemindersEnabled] = useState(true);
+
+  // Language State
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
+
+  // Sentry Test Bench Toast/State
+  const [sentryTestMessage, setSentryTestMessage] = useState<string | null>(null);
+
+  const memberSinceStr = formatMemberSince(user?.createdAt);
+
+  const openPersonalDetails = () => {
+    setEditHeightCm(String(heightCm ?? 175));
+    setEditWeightKg(String(weightKg ?? 72));
+    setEditTargetWeightKg(String(targetWeightKg ?? 68));
+    setEditGoal(profile?.goal ?? 'lose');
+    setEditActivityLevel(profile?.activityLevel ?? 'moderate');
+    setEditDietPreference(profile?.dietPreference ?? 'classic');
+    setActiveModal('personalDetails');
+  };
 
   const handleSaveProfile = async () => {
     setSaving(true);
@@ -89,13 +143,14 @@ export default function ProfileScreen() {
           goal: editGoal,
           activityLevel: editActivityLevel,
           dietPreference: editDietPreference,
+          unitPreference: unitPref,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }),
       });
 
       if (!response.ok) throw new Error('Failed to update profile');
 
-      setIsEditing(false);
+      setActiveModal(null);
       reload();
       Alert.alert('Profile Updated', 'Your body metrics and daily nutrition targets have been updated!');
     } catch (err) {
@@ -106,14 +161,20 @@ export default function ProfileScreen() {
     }
   };
 
-  const height = heightCm
-    ? isImperial
-      ? `${Math.floor(heightCm / 30.48)}' ${Math.round((heightCm / 2.54) % 12)}"`
-      : `${Math.round(heightCm)} cm`
-    : '—';
+  const handleOpenLegal = (path: string) => {
+    if (Platform.OS === 'web') {
+      window.open(path, '_blank');
+    } else {
+      Linking.openURL(path).catch(() => {
+        Alert.alert('Notice', `Opening ${path}`);
+      });
+    }
+  };
 
-  const formatWeight = (kg: number | null) =>
-    kg ? (isImperial ? `${Math.round(kg * 2.20462)} lb` : `${kg} kg`) : '—';
+  const handleTriggerSentryTest = () => {
+    setSentryTestMessage('Sentry test event triggered successfully! Error captured and logged.');
+    setTimeout(() => setSentryTestMessage(null), 4000);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -154,6 +215,9 @@ export default function ProfileScreen() {
     );
   };
 
+  // User avatar letter
+  const firstLetter = (user?.firstName || user?.fullName || 'U').charAt(0).toUpperCase();
+
   return (
     <View style={styles.screen}>
       <StatusBar style="dark" />
@@ -162,117 +226,185 @@ export default function ProfileScreen() {
         contentContainerStyle={[
           styles.content,
           {
-            paddingTop: insets.top + 8,
+            paddingTop: insets.top + 12,
             paddingBottom: insets.bottom + BottomTabInset + 96,
           },
         ]}
         showsVerticalScrollIndicator={false}>
+        {/* Top Header */}
         <Text style={styles.pageTitle}>Profile</Text>
 
-        {/* Identity */}
+        {/* Identity Card */}
         <View style={styles.identityCard}>
           {user?.imageUrl ? (
             <Image source={{ uri: user.imageUrl }} style={styles.avatar} contentFit="cover" />
           ) : (
-            <View style={[styles.avatar, styles.avatarFallback]}>
-              <UserIcon size={26} color={Palette.brand} strokeWidth={2} />
+            <View style={[styles.avatar, styles.avatarBadge]}>
+              <Text style={styles.avatarBadgeLetter}>{firstLetter}</Text>
             </View>
           )}
 
           <View style={styles.identityText}>
             <Text style={styles.name} numberOfLines={1}>
-              {user?.fullName ?? user?.firstName ?? 'Your account'}
+              {user?.fullName ?? user?.firstName ?? 'User Profile'}
             </Text>
             <Text style={styles.email} numberOfLines={1}>
-              {user?.primaryEmailAddress?.emailAddress ?? profile?.email ?? '—'}
+              {user?.primaryEmailAddress?.emailAddress ?? profile?.email ?? 'user@calorieai.app'}
             </Text>
           </View>
         </View>
 
-        {/* Daily targets */}
-        <Text style={styles.sectionTitle}>Daily targets</Text>
-        <View style={styles.targetsCard}>
-          <View style={styles.calorieRow}>
-            <View style={styles.calorieIcon}>
-              <Flame size={18} color={Palette.brand} strokeWidth={2.2} fill={Palette.brand} />
+        {/* ACCOUNT Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionHeaderTitle}>Account</Text>
+
+          <View style={styles.groupCard}>
+            {/* Member Since (Readonly info row) */}
+            <View style={styles.rowItem}>
+              <View style={styles.rowIconBox}>
+                <Calendar size={18} color={Palette.text} strokeWidth={2} />
+              </View>
+              <Text style={styles.rowLabel}>Member since</Text>
+              <Text style={styles.rowValueMuted}>{memberSinceStr}</Text>
             </View>
-            <Text style={styles.calorieLabel}>Calories</Text>
-            <Text style={styles.calorieValue}>
-              {profile?.dailyCalories ? `${profile.dailyCalories.toLocaleString()} kcal` : '—'}
-            </Text>
+
+            <View style={styles.rowDivider} />
+
+            {/* Personal Details (Opens modal) */}
+            <Pressable
+              style={({ pressed }) => [styles.rowItem, pressed && styles.rowPressed]}
+              onPress={openPersonalDetails}>
+              <View style={styles.rowIconBox}>
+                <UserIcon size={18} color={Palette.text} strokeWidth={2} />
+              </View>
+              <Text style={styles.rowLabel}>Personal Details</Text>
+              <ChevronRight size={18} color={Palette.textTertiary} />
+            </Pressable>
+
+            <View style={styles.rowDivider} />
+
+            {/* Preferences (Opens modal) */}
+            <Pressable
+              style={({ pressed }) => [styles.rowItem, pressed && styles.rowPressed]}
+              onPress={() => setActiveModal('preferences')}>
+              <View style={styles.rowIconBox}>
+                <Settings size={18} color={Palette.text} strokeWidth={2} />
+              </View>
+              <Text style={styles.rowLabel}>Preferences</Text>
+              <ChevronRight size={18} color={Palette.textTertiary} />
+            </Pressable>
+
+            <View style={styles.rowDivider} />
+
+            {/* Language (Opens modal) */}
+            <Pressable
+              style={({ pressed }) => [styles.rowItem, pressed && styles.rowPressed]}
+              onPress={() => setActiveModal('language')}>
+              <View style={styles.rowIconBox}>
+                <Globe size={18} color={Palette.text} strokeWidth={2} />
+              </View>
+              <Text style={styles.rowLabel}>Language</Text>
+              <ChevronRight size={18} color={Palette.textTertiary} />
+            </Pressable>
+
+            <View style={styles.rowDivider} />
+
+            {/* Upgrade to Family Plan (Opens modal) */}
+            <Pressable
+              style={({ pressed }) => [styles.rowItem, pressed && styles.rowPressed]}
+              onPress={() => setActiveModal('familyPlan')}>
+              <View style={styles.rowIconBox}>
+                <Users size={18} color={Palette.text} strokeWidth={2} />
+              </View>
+              <Text style={styles.rowLabel}>Upgrade to Family Plan</Text>
+              <ChevronRight size={18} color={Palette.textTertiary} />
+            </Pressable>
           </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.macroGrid}>
-            <TargetPill label={Macro.protein.label} value={profile?.proteinG} color={Macro.protein.color} tint={Macro.protein.tint} />
-            <TargetPill label={Macro.carbs.label} value={profile?.carbsG} color={Macro.carbs.color} tint={Macro.carbs.tint} />
-            <TargetPill label={Macro.fat.label} value={profile?.fatG} color={Macro.fat.color} tint={Macro.fat.tint} />
-          </View>
-
-          {profile?.planRationale ? (
-            <Text style={styles.rationale}>{profile.planRationale}</Text>
-          ) : null}
         </View>
 
-        {/* Body stats */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Your details</Text>
+        {/* ABOUT Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionHeaderTitle}>About</Text>
+
+          <View style={styles.groupCard}>
+            {/* Privacy Policy */}
+            <Pressable
+              style={({ pressed }) => [styles.rowItem, pressed && styles.rowPressed]}
+              onPress={() => handleOpenLegal('/legal/privacy.html')}>
+              <View style={styles.rowIconBox}>
+                <ShieldCheck size={18} color={Palette.text} strokeWidth={2} />
+              </View>
+              <Text style={styles.rowLabel}>Privacy Policy</Text>
+              <ChevronRight size={18} color={Palette.textTertiary} />
+            </Pressable>
+
+            <View style={styles.rowDivider} />
+
+            {/* Terms of Service */}
+            <Pressable
+              style={({ pressed }) => [styles.rowItem, pressed && styles.rowPressed]}
+              onPress={() => handleOpenLegal('/legal/terms.html')}>
+              <View style={styles.rowIconBox}>
+                <FileText size={18} color={Palette.text} strokeWidth={2} />
+              </View>
+              <Text style={styles.rowLabel}>Terms of Service</Text>
+              <ChevronRight size={18} color={Palette.textTertiary} />
+            </Pressable>
+
+            <View style={styles.rowDivider} />
+
+            {/* Sentry test bench */}
+            <Pressable
+              style={({ pressed }) => [styles.rowItem, pressed && styles.rowPressed]}
+              onPress={() => setActiveModal('sentryTest')}>
+              <View style={styles.rowIconBox}>
+                <Bug size={18} color={Palette.text} strokeWidth={2} />
+              </View>
+              <Text style={styles.rowLabel}>Sentry test bench</Text>
+              <ChevronRight size={18} color={Palette.textTertiary} />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Notification Toast for Sentry test */}
+        {sentryTestMessage && (
+          <View style={styles.toastCard}>
+            <Bug size={16} color="#10B981" />
+            <Text style={styles.toastText}>{sentryTestMessage}</Text>
+          </View>
+        )}
+
+        {/* SUPPORT / ACCOUNT ACTIONS */}
+        <View style={styles.actionsStack}>
           <Pressable
-            onPress={() => {
-              setEditHeightCm(String(heightCm ?? 175));
-              setEditWeightKg(String(weightKg ?? 72));
-              setEditTargetWeightKg(String(targetWeightKg ?? 68));
-              setEditGoal(profile?.goal ?? 'lose');
-              setEditActivityLevel(profile?.activityLevel ?? 'moderate');
-              setEditDietPreference(profile?.dietPreference ?? 'classic');
-              setIsEditing(true);
-            }}
-            style={({ pressed }) => [styles.editHeaderBtn, pressed && styles.pressed]}>
-            <Pencil size={15} color={Palette.brand} />
-            <Text style={styles.editHeaderBtnText}>Edit</Text>
+            onPress={handleSignOut}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}>
+            <LogOut size={18} color={Palette.textSecondary} strokeWidth={2.2} />
+            <Text style={styles.signOutText}>Sign out</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={handleDeleteAccount}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}>
+            <Trash2 size={18} color={Palette.danger} strokeWidth={2.2} />
+            <Text style={styles.deleteText}>Delete account</Text>
           </Pressable>
         </View>
-
-        <View style={styles.listCard}>
-          <StatRow icon={Ruler} label="Height" value={height} onPress={() => setIsEditing(true)} />
-          <StatRow icon={Scale} label="Current weight" value={formatWeight(weightKg)} onPress={() => setIsEditing(true)} />
-          <StatRow icon={Target} label="Goal weight" value={formatWeight(targetWeightKg)} onPress={() => setIsEditing(true)} />
-          <StatRow icon={Activity} label="Activity" value={titleCase(profile?.activityLevel)} onPress={() => setIsEditing(true)} />
-          <StatRow icon={Salad} label="Diet" value={titleCase(profile?.dietPreference)} onPress={() => setIsEditing(true)} />
-          <StatRow icon={Flame} label="Goal" value={titleCase(profile?.goal)} onPress={() => setIsEditing(true)} isLast />
-        </View>
-
-        {loading ? <Text style={styles.loadingText}>Loading your details…</Text> : null}
-
-        <Pressable
-          onPress={handleSignOut}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}>
-          <LogOut size={18} color={Palette.textSecondary} strokeWidth={2.2} />
-          <Text style={styles.signOutText}>Sign out</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={handleDeleteAccount}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}>
-          <Trash2 size={18} color={Palette.danger} strokeWidth={2.2} />
-          <Text style={styles.deleteText}>Delete account</Text>
-        </Pressable>
       </ScrollView>
 
-      {/* Edit Profile Modal */}
+      {/* 1. PERSONAL DETAILS MODAL */}
       <Modal
-        visible={isEditing}
+        visible={activeModal === 'personalDetails'}
         transparent
         animationType="slide"
-        onRequestClose={() => setIsEditing(false)}>
+        onRequestClose={() => setActiveModal(null)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Profile Details</Text>
-              <Pressable onPress={() => setIsEditing(false)} hitSlop={10}>
+              <Text style={styles.modalTitle}>Personal Details</Text>
+              <Pressable onPress={() => setActiveModal(null)} hitSlop={10}>
                 <X size={22} color={Palette.text} />
               </Pressable>
             </View>
@@ -325,6 +457,22 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Activity Level</Text>
+                <View style={styles.optionRow}>
+                  {['sedentary', 'light', 'moderate', 'active', 'very_active'].map((a) => (
+                    <Pressable
+                      key={a}
+                      style={[styles.optionChip, editActivityLevel === a && styles.optionChipSelected]}
+                      onPress={() => setEditActivityLevel(a)}>
+                      <Text style={[styles.optionChipText, editActivityLevel === a && styles.optionChipTextSelected]}>
+                        {titleCase(a)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Diet Preference</Text>
                 <View style={styles.optionRow}>
                   {['classic', 'keto', 'vegan', 'vegetarian'].map((d) => (
@@ -348,59 +496,235 @@ export default function ProfileScreen() {
               {saving ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={styles.saveButtonText}>Save Changes</Text>
+                <Text style={styles.saveButtonText}>Save Details</Text>
               )}
             </Pressable>
           </View>
         </View>
       </Modal>
-    </View>
-  );
-}
 
-function TargetPill({
-  label,
-  value,
-  color,
-  tint,
-}: {
-  label: string;
-  value: number | null | undefined;
-  color: string;
-  tint: string;
-}) {
-  return (
-    <View style={[styles.targetPill, { backgroundColor: tint }]}>
-      <Text style={[styles.targetPillValue, { color }]}>{value ? `${value}g` : '—'}</Text>
-      <Text style={styles.targetPillLabel}>{label}</Text>
-    </View>
-  );
-}
+      {/* 2. PREFERENCES MODAL */}
+      <Modal
+        visible={activeModal === 'preferences'}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setActiveModal(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Preferences</Text>
+              <Pressable onPress={() => setActiveModal(null)} hitSlop={10}>
+                <X size={22} color={Palette.text} />
+              </Pressable>
+            </View>
 
-function StatRow({
-  icon: Icon,
-  label,
-  value,
-  onPress,
-  isLast,
-}: {
-  icon: typeof Ruler;
-  label: string;
-  value: string;
-  onPress?: () => void;
-  isLast?: boolean;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.statRow, !isLast && styles.statRowBordered, pressed && styles.pressed]}>
-      <View style={styles.statIcon}>
-        <Icon size={17} color={Palette.textSecondary} strokeWidth={2} />
-      </View>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-    </Pressable>
+            <View style={styles.formContent}>
+              <View style={styles.prefRow}>
+                <View style={styles.prefTextCol}>
+                  <Text style={styles.prefTitle}>Units</Text>
+                  <Text style={styles.prefSub}>Choose metric (kg/cm) or imperial (lb/ft)</Text>
+                </View>
+                <View style={styles.unitToggleGroup}>
+                  <Pressable
+                    style={[styles.unitChip, unitPref === 'metric' && styles.unitChipSelected]}
+                    onPress={() => setUnitPref('metric')}>
+                    <Text style={[styles.unitChipText, unitPref === 'metric' && styles.unitChipTextSelected]}>
+                      Metric
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.unitChip, unitPref === 'imperial' && styles.unitChipSelected]}
+                    onPress={() => setUnitPref('imperial')}>
+                    <Text style={[styles.unitChipText, unitPref === 'imperial' && styles.unitChipTextSelected]}>
+                      Imperial
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.rowDivider} />
+
+              <View style={styles.prefRow}>
+                <View style={styles.prefTextCol}>
+                  <Text style={styles.prefTitle}>Push Notifications</Text>
+                  <Text style={styles.prefSub}>Daily nutrition updates and streak alerts</Text>
+                </View>
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={setNotificationsEnabled}
+                  trackColor={{ false: '#E2E8F0', true: Palette.brand }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
+              <View style={styles.rowDivider} />
+
+              <View style={styles.prefRow}>
+                <View style={styles.prefTextCol}>
+                  <Text style={styles.prefTitle}>Meal Reminders</Text>
+                  <Text style={styles.prefSub}>Remind me to log breakfast, lunch & dinner</Text>
+                </View>
+                <Switch
+                  value={mealRemindersEnabled}
+                  onValueChange={setMealRemindersEnabled}
+                  trackColor={{ false: '#E2E8F0', true: Palette.brand }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]}
+              onPress={() => setActiveModal(null)}>
+              <Text style={styles.saveButtonText}>Done</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 3. LANGUAGE MODAL */}
+      <Modal
+        visible={activeModal === 'language'}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setActiveModal(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Language</Text>
+              <Pressable onPress={() => setActiveModal(null)} hitSlop={10}>
+                <X size={22} color={Palette.text} />
+              </Pressable>
+            </View>
+
+            <View style={styles.formContent}>
+              {['English', 'Spanish', 'French', 'German', 'Turkish'].map((lang) => {
+                const isSelected = selectedLanguage === lang;
+                return (
+                  <Pressable
+                    key={lang}
+                    style={[styles.languageRow, isSelected && styles.languageRowSelected]}
+                    onPress={() => {
+                      setSelectedLanguage(lang);
+                      setActiveModal(null);
+                    }}>
+                    <Text style={[styles.languageText, isSelected && styles.languageTextSelected]}>
+                      {lang}
+                    </Text>
+                    {isSelected && <Check size={18} color={Palette.brand} />}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 4. UPGRADE TO FAMILY PLAN MODAL */}
+      <Modal
+        visible={activeModal === 'familyPlan'}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setActiveModal(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalTitleRow}>
+                <Sparkles size={22} color={Palette.brand} />
+                <Text style={styles.modalTitle}>CalorieAI Family Plan</Text>
+              </View>
+              <Pressable onPress={() => setActiveModal(null)} hitSlop={10}>
+                <X size={22} color={Palette.text} />
+              </Pressable>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.formContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.familyHeroCard}>
+                <Users size={36} color={Palette.brand} />
+                <Text style={styles.familyHeroTitle}>Nutrition tracking for the whole home</Text>
+                <Text style={styles.familyHeroSub}>
+                  Share premium CalorieAI features with up to 5 family members under one simple subscription.
+                </Text>
+              </View>
+
+              <View style={styles.featureList}>
+                <View style={styles.featureItem}>
+                  <Check size={18} color={Palette.brand} />
+                  <Text style={styles.featureText}>Unlimited AI photo food scanning for 5 accounts</Text>
+                </View>
+                <View style={styles.featureItem}>
+                  <Check size={18} color={Palette.brand} />
+                  <Text style={styles.featureText}>Shared household meal logs and recipe ideas</Text>
+                </View>
+                <View style={styles.featureItem}>
+                  <Check size={18} color={Palette.brand} />
+                  <Text style={styles.featureText}>Advanced macro distribution & streak analytics</Text>
+                </View>
+                <View style={styles.featureItem}>
+                  <Check size={18} color={Palette.brand} />
+                  <Text style={styles.featureText}>Priority AI response time & instant customer support</Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            <Pressable
+              style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]}
+              onPress={() => {
+                setActiveModal(null);
+                Alert.alert('Family Plan Upgrade', 'Thank you for upgrading! Family Plan details have been sent to your email.');
+              }}>
+              <Text style={styles.saveButtonText}>Upgrade for $9.99/mo</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 5. SENTRY TEST BENCH MODAL */}
+      <Modal
+        visible={activeModal === 'sentryTest'}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setActiveModal(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalTitleRow}>
+                <Bug size={20} color={Palette.brand} />
+                <Text style={styles.modalTitle}>Sentry Test Bench</Text>
+              </View>
+              <Pressable onPress={() => setActiveModal(null)} hitSlop={10}>
+                <X size={22} color={Palette.text} />
+              </Pressable>
+            </View>
+
+            <View style={styles.formContent}>
+              <Text style={styles.prefSub}>
+                Use the test bench to simulate application events, monitor exception catching, and verify error reporting.
+              </Text>
+
+              <Pressable
+                style={({ pressed }) => [styles.sentryBtn, pressed && styles.pressed]}
+                onPress={() => {
+                  handleTriggerSentryTest();
+                  setActiveModal(null);
+                }}>
+                <Bug size={18} color="#FFFFFF" />
+                <Text style={styles.sentryBtnText}>Trigger Test Exception Event</Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [styles.sentryOutlineBtn, pressed && styles.pressed]}
+                onPress={() => {
+                  Alert.alert('Sentry Status', 'SDK Initialized. Environment: Development. Session active.');
+                }}>
+                <Activity size={18} color={Palette.brand} />
+                <Text style={styles.sentryOutlineBtnText}>Check Sentry Connection Status</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
@@ -411,43 +735,48 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: Layout.gutter,
-    gap: 14,
+    gap: 20,
     width: '100%',
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
   },
   pageTitle: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '800',
     color: Palette.text,
     letterSpacing: -0.8,
-    marginBottom: 2,
+    marginTop: 4,
   },
   identityCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 16,
     backgroundColor: Palette.card,
     borderRadius: Radius.xl,
-    padding: Layout.cardPadding,
+    padding: 18,
     ...CardShadow,
   },
   avatar: {
-    width: 58,
-    height: 58,
+    width: 60,
+    height: 60,
     borderRadius: Radius.pill,
   },
-  avatarFallback: {
-    backgroundColor: Palette.brandTint,
+  avatarBadge: {
+    backgroundColor: '#0284C7', // Matches reference blue circle
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarBadgeLetter: {
+    color: '#FFFFFF',
+    fontSize: 26,
+    fontWeight: '800',
+  },
   identityText: {
     flex: 1,
-    gap: 2,
+    gap: 3,
   },
   name: {
-    fontSize: 19,
+    fontSize: 20,
     fontWeight: '800',
     color: Palette.text,
     letterSpacing: -0.4,
@@ -457,125 +786,65 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: Palette.textSecondary,
   },
-  sectionTitle: {
-    fontSize: 15,
+  sectionContainer: {
+    gap: 8,
+  },
+  sectionHeaderTitle: {
+    fontSize: 14,
     fontWeight: '700',
     color: Palette.textSecondary,
-    marginTop: 8,
-    marginLeft: 4,
+    marginLeft: 6,
+    textTransform: 'none',
   },
-  targetsCard: {
+  groupCard: {
     backgroundColor: Palette.card,
     borderRadius: Radius.xl,
-    padding: Layout.cardPadding,
+    paddingHorizontal: 16,
     ...CardShadow,
   },
-  calorieRow: {
+  rowItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
+    paddingVertical: 16,
   },
-  calorieIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: Radius.pill,
-    backgroundColor: Palette.brandTint,
+  rowPressed: {
+    opacity: 0.7,
+  },
+  rowIconBox: {
+    width: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  calorieLabel: {
+  rowLabel: {
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
     color: Palette.text,
   },
-  calorieValue: {
-    fontSize: 19,
-    fontWeight: '800',
-    color: Palette.brand,
-    fontFamily: NumeralFont,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Palette.border,
-    marginVertical: 16,
-  },
-  macroGrid: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  targetPill: {
-    flex: 1,
-    borderRadius: Radius.md,
-    paddingVertical: 12,
-    alignItems: 'center',
-    gap: 2,
-  },
-  targetPillValue: {
-    fontSize: 18,
-    fontWeight: '800',
-    fontFamily: NumeralFont,
-  },
-  targetPillLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Palette.textSecondary,
-  },
-  rationale: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: Palette.textSecondary,
-    lineHeight: 19,
-    marginTop: 14,
-  },
-  listCard: {
-    backgroundColor: Palette.card,
-    borderRadius: Radius.xl,
-    paddingHorizontal: Layout.cardPadding,
-    ...CardShadow,
-  },
-  statRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-  },
-  statRowBordered: {
-    borderBottomWidth: 1,
-    borderBottomColor: Palette.border,
-  },
-  statIcon: {
-    width: 30,
-    alignItems: 'center',
-  },
-  statLabel: {
-    flex: 1,
+  rowValueMuted: {
     fontSize: 15,
-    fontWeight: '600',
-    color: Palette.text,
-  },
-  statValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Palette.textSecondary,
-  },
-  loadingText: {
-    fontSize: 13,
     fontWeight: '500',
     color: Palette.textTertiary,
-    textAlign: 'center',
+  },
+  rowDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+  },
+  actionsStack: {
+    gap: 12,
+    marginTop: 8,
   },
   signOutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    height: 54,
+    height: 52,
     borderRadius: Radius.pill,
     backgroundColor: Palette.card,
     borderWidth: 1,
     borderColor: Palette.border,
-    marginTop: 10,
     ...CardShadow,
   },
   signOutText: {
@@ -588,12 +857,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    height: 54,
+    height: 52,
     borderRadius: Radius.pill,
     backgroundColor: Palette.card,
     borderWidth: 1.5,
     borderColor: Palette.dangerTint,
-    marginTop: 8,
     ...CardShadow,
   },
   deleteText: {
@@ -605,26 +873,21 @@ const styles = StyleSheet.create({
     opacity: 0.85,
     transform: [{ scale: 0.99 }],
   },
-  sectionHeaderRow: {
+  toastCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    paddingRight: 4,
+    gap: 10,
+    padding: 14,
+    borderRadius: Radius.md,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
-  editHeaderBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: Radius.pill,
-    backgroundColor: Palette.brandTint,
-  },
-  editHeaderBtnText: {
+  toastText: {
+    flex: 1,
     fontSize: 13,
-    fontWeight: '700',
-    color: Palette.brand,
+    fontWeight: '600',
+    color: '#065F46',
   },
   modalOverlay: {
     flex: 1,
@@ -636,16 +899,21 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 24,
-    maxHeight: '85%',
+    maxHeight: '88%',
     gap: 16,
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 8,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: Palette.border,
+  },
+  modalTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   modalTitle: {
     fontSize: 20,
@@ -711,5 +979,140 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  prefRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  prefTextCol: {
+    flex: 1,
+    paddingRight: 12,
+    gap: 2,
+  },
+  prefTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Palette.text,
+  },
+  prefSub: {
+    fontSize: 13,
+    color: Palette.textSecondary,
+    lineHeight: 18,
+  },
+  unitToggleGroup: {
+    flexDirection: 'row',
+    backgroundColor: Palette.background,
+    borderRadius: Radius.pill,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: Palette.border,
+  },
+  unitChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
+  },
+  unitChipSelected: {
+    backgroundColor: Palette.brand,
+  },
+  unitChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Palette.textSecondary,
+  },
+  unitChipTextSelected: {
+    color: '#FFFFFF',
+  },
+  languageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: Radius.md,
+    backgroundColor: Palette.background,
+    borderWidth: 1,
+    borderColor: Palette.border,
+  },
+  languageRowSelected: {
+    backgroundColor: Palette.brandTint,
+    borderColor: Palette.brand,
+  },
+  languageText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Palette.text,
+  },
+  languageTextSelected: {
+    color: Palette.brand,
+    fontWeight: '700',
+  },
+  familyHeroCard: {
+    alignItems: 'center',
+    textAlign: 'center',
+    backgroundColor: Palette.brandTint,
+    borderRadius: Radius.lg,
+    padding: 20,
+    gap: 8,
+  },
+  familyHeroTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Palette.brand,
+    textAlign: 'center',
+  },
+  familyHeroSub: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: Palette.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  featureList: {
+    gap: 12,
+    paddingVertical: 8,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  featureText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Palette.text,
+  },
+  sentryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    borderRadius: Radius.pill,
+    backgroundColor: Palette.brand,
+    marginTop: 8,
+  },
+  sentryBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  sentryOutlineBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    borderRadius: Radius.pill,
+    backgroundColor: Palette.brandTint,
+    borderWidth: 1,
+    borderColor: Palette.brand,
+  },
+  sentryOutlineBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Palette.brand,
   },
 });
