@@ -17,9 +17,9 @@
 
 <body>
   <!-- ============================================================
-       Lucide icon sprite (lucide.dev, ISC). Defined once, referenced
-       everywhere with <svg class="ic"><use href="#i-name"/></svg>.
-       Stroke styling lives on .ic in style.css.
+       Lucide icon sprite (lucide.dev, ISC). Defined once here, then
+       referenced anywhere on the page with a <use> element pointing at
+       the symbol id. Stroke styling lives on .ic in style.css.
        ============================================================ -->
   <svg class="sprite" aria-hidden="true" focusable="false">
     <symbol id="i-star" viewBox="0 0 24 24">
@@ -109,10 +109,6 @@
       <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
       <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
       <path d="M7 12h10" />
-    </symbol>
-    <symbol id="i-arrow-right" viewBox="0 0 24 24">
-      <path d="M5 12h14" />
-      <path d="m12 5 7 7-7 7" />
     </symbol>
     <symbol id="i-linkedin" viewBox="0 0 24 24">
       <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
@@ -247,7 +243,7 @@
 
       <div class="wall-grid">
         <!-- Card 1: Jeremiah Jones -->
-        <figure class="wall-card card-tall">
+        <figure class="wall-card">
           <img src="jeremiah.webp" alt="Jeremiah Jones" loading="lazy" />
           <figcaption class="wall-card-overlay">
             <svg class="ic wall-card-quote-icon" aria-hidden="true"><use href="#i-quote" /></svg>

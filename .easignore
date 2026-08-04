@@ -1,0 +1,18 @@
+# EAS Build ignore configuration
+# Exclude heavy local build caches and node_modules from cloud upload archive
+
+node_modules/
+.expo/
+dist/
+web-build/
+.venv-design/
+.trigger/
+.vscode/
+.git/
+android/.gradle/
+android/app/build/
+android/build/
+ios/Pods/
+ios/build/
+*.png
+*.jpg

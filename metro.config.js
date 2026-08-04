@@ -1,8 +1,7 @@
-// Sentry's wrapper around expo/metro-config — same config, plus source map upload.
-const { getSentryExpoConfig } = require('@sentry/react-native/metro');
+const { getDefaultConfig } = require('expo/metro-config');
 const { withNativeWind } = require('nativewind/metro');
 
-const config = getSentryExpoConfig(__dirname);
+const config = getDefaultConfig(__dirname);
 
 // Several packages under @trigger.dev/react-hooks (nanoid, jose) have no `react-native`
 // key in their exports map, so Metro falls through to `default` — the Node build that

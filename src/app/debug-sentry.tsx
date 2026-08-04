@@ -127,7 +127,7 @@ async function tracedMealAnalysis() {
   await Sentry.startSpan({ name: 'Analyze meal photo', op: 'meal.analyze' }, async () => {
     await Sentry.startSpan({ name: 'Compress image', op: 'image.compress' }, () => sleep(180));
     await Sentry.startSpan({ name: 'Upload to ImageKit', op: 'http.client' }, () => sleep(520));
-    await Sentry.startSpan({ name: 'Vision model', op: 'gen_ai.chat' }, async (span) => {
+    await Sentry.startSpan({ name: 'Vision model', op: 'gen_ai.chat' }, async (span: Sentry.Span) => {
       span.setAttribute('model', 'gpt-4o-mini');
       await sleep(1400);
     });

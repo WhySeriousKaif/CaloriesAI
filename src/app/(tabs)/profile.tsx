@@ -1,4 +1,5 @@
 import { useAuth, useUser } from '@clerk/expo';
+import * as Sentry from '@sentry/react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -76,7 +77,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useUser();
-  const { signOut, getToken } = useAuth();
+  const { signOut, getToken, userId } = useAuth();
   const { profile, loading, reload } = useProfile();
 
   const heightCm = toNumber(profile?.heightCm);
@@ -171,9 +172,63 @@ export default function ProfileScreen() {
     }
   };
 
+  /**
+   * Sends a real event and reports the event id, so a missing DSN or a
+   * misconfigured project shows up here instead of looking like success.
+   */
   const handleTriggerSentryTest = () => {
-    setSentryTestMessage('Sentry test event triggered successfully! Error captured and logged.');
-    setTimeout(() => setSentryTestMessage(null), 4000);
+    if (!Sentry.getClient()) {
+      setSentryTestMessage('Sentry is not initialised — EXPO_PUBLIC_SENTRY_DSN is empty.');
+      setTimeout(() => setSentryTestMessage(null), 5000);
+      return;
+    }
+
+    let eventId = '';
+    Sentry.withScope((scope) => {
+      scope.setTag('feature', 'profile');
+      scope.setTag('source', 'test-bench');
+      scope.setLevel('error');
+      eventId = Sentry.captureException(
+        new Error('Profile test event — triggered from the Sentry test bench'),
+      );
+    });
+
+    // Push it out now rather than waiting for the next natural flush.
+    Sentry.flush().catch(() => {});
+
+    setSentryTestMessage(`Event sent to Sentry — id ${eventId.slice(0, 8)}`);
+    setTimeout(() => setSentryTestMessage(null), 5000);
+  };
+
+  /** Reports the SDK's actual state rather than a hardcoded string. */
+  const handleCheckSentryStatus = () => {
+    const client = Sentry.getClient();
+    if (!client) {
+      Alert.alert(
+        'Sentry not initialised',
+        'EXPO_PUBLIC_SENTRY_DSN is empty, so Sentry.init() was skipped. Add the DSN to .env and restart the bundler with --clear.',
+      );
+      return;
+    }
+
+    const options = client.getOptions();
+    const dsn = options.dsn ? String(options.dsn) : '';
+    // A DSN looks like https://<key>@<host>/<projectId> — show only the host
+    // and project so we never surface the key in a screenshot.
+    const parts = dsn.match(/@([^/]+)\/(\d+)/);
+
+    Alert.alert(
+      'Sentry status',
+      [
+        'SDK: initialised',
+        `Environment: ${options.environment ?? 'unset'}`,
+        `Host: ${parts?.[1] ?? 'unknown'}`,
+        `Project: ${parts?.[2] ?? 'unknown'}`,
+        `Traces sample rate: ${options.tracesSampleRate ?? 0}`,
+        `Logs: ${options.enableLogs ? 'on' : 'off'}`,
+        `User: ${userId ?? 'anonymous'}`,
+      ].join('\n'),
+    );
   };
 
   const handleSignOut = async () => {
@@ -714,12 +769,22 @@ export default function ProfileScreen() {
 
               <Pressable
                 style={({ pressed }) => [styles.sentryOutlineBtn, pressed && styles.pressed]}
-                onPress={() => {
-                  Alert.alert('Sentry Status', 'SDK Initialized. Environment: Development. Session active.');
-                }}>
+                onPress={handleCheckSentryStatus}>
                 <Activity size={18} color={Palette.brand} />
                 <Text style={styles.sentryOutlineBtnText}>Check Sentry Connection Status</Text>
               </Pressable>
+
+              {__DEV__ && (
+                <Pressable
+                  style={({ pressed }) => [styles.sentryOutlineBtn, pressed && styles.pressed]}
+                  onPress={() => {
+                    setActiveModal(null);
+                    router.push('/debug-sentry');
+                  }}>
+                  <Bug size={18} color={Palette.brand} />
+                  <Text style={styles.sentryOutlineBtnText}>Open full QA bench (dev only)</Text>
+                </Pressable>
+              )}
             </View>
           </View>
         </View>

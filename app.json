@@ -58,8 +58,8 @@
       [
         "@sentry/react-native/expo",
         {
-          "organization": "o4511834665189376",
-          "project": "calorie-ai"
+          "organization": "calai",
+          "project": "react-native"
         }
       ],
       "expo-image"
