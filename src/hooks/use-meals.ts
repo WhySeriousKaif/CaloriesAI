@@ -1,3 +1,4 @@
+import { getCache, setCache } from '@/lib/cache';
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -16,10 +17,27 @@ export type MealItem = {
 };
 
 export function useMeals(date?: string) {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { isLoaded, isSignedIn, getToken, userId } = useAuth();
   const [meals, setMeals] = useState<MealItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const cacheKey = `user_meals_${userId || 'anon'}_${date || 'all'}`;
+
+  // Load from local storage cache immediately on mount
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    void getCache<MealItem[]>(cacheKey).then((cached) => {
+      if (active && cached && Array.isArray(cached)) {
+        setMeals(cached);
+        setLoading(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [userId, cacheKey]);
 
   const fetchMeals = useCallback(async () => {
     if (!isLoaded || !isSignedIn) {
@@ -38,13 +56,19 @@ export function useMeals(date?: string) {
 
       if (!res || !res.ok) return;
       const data = await res.json().catch(() => null);
-      if (data) setMeals(data.meals || (Array.isArray(data) ? data : []));
+      if (data) {
+        const list = data.meals || (Array.isArray(data) ? data : []);
+        setMeals(list);
+        if (userId) {
+          void setCache(cacheKey, list);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error fetching meals');
     } finally {
       setLoading(false);
     }
-  }, [isLoaded, isSignedIn, getToken, date]);
+  }, [isLoaded, isSignedIn, getToken, date, userId, cacheKey]);
 
   useEffect(() => {
     void fetchMeals();
@@ -79,7 +103,11 @@ export function useMeals(date?: string) {
         const data = await res.json();
         const newMeal = data.meal || data;
         if (newMeal && newMeal.id) {
-          setMeals((prev) => [newMeal, ...prev.filter((m) => m.id !== newMeal.id)]);
+          setMeals((prev) => {
+            const updated = [newMeal, ...prev.filter((m) => m.id !== newMeal.id)];
+            if (userId) void setCache(cacheKey, updated);
+            return updated;
+          });
         }
         return newMeal;
       } catch (err) {
@@ -87,7 +115,7 @@ export function useMeals(date?: string) {
         throw err;
       }
     },
-    [getToken]
+    [getToken, userId, cacheKey]
   );
 
   return { meals, loading, error, reload: fetchMeals, logMeal };

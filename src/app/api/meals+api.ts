@@ -6,20 +6,20 @@ import { db, meals, users } from '../../../db';
 import { uploadToImageKit } from '@/lib/imagekit';
 import { getAuthUserId, unauthorized } from '@/lib/server-auth';
 
-const SYSTEM_PROMPT = `You are an expert clinical nutritionist and food recognition AI for Calora. Analyze food photos accurately.
+const SYSTEM_PROMPT = `You are an expert clinical nutritionist and food recognition AI for Calora. Analyze food photos with high accuracy for multi-item portions, plate contents, and user notes.
 
 Return a valid JSON object with the following fields:
 - is_food (boolean)
-- name (string: e.g. "Amul Tri Cone Chocolate Gold", "Grilled Chicken Salad")
-- calories (number)
-- protein_g (number)
-- carbs_g (number)
-- fat_g (number)
-- fiber_g (number)
-- sugar_g (number)
-- sodium_mg (number)
-- sat_fat_g (number)
-- serving_size (string, e.g. "1 cone (110g)")
+- name (string: e.g. "Gulab Jamun", "Amul Tri Cone Chocolate Gold", "Grilled Chicken Salad")
+- calories (number: TOTAL calories for ALL items/pieces consumed or shown in photo)
+- protein_g (number: TOTAL protein in grams for the entire portion)
+- carbs_g (number: TOTAL carbs in grams for the entire portion)
+- fat_g (number: TOTAL fat in grams for the entire portion)
+- fiber_g (number: TOTAL fiber in grams for the entire portion)
+- sugar_g (number: TOTAL sugar in grams for the entire portion)
+- sodium_mg (number: TOTAL sodium in mg for the entire portion)
+- sat_fat_g (number: TOTAL saturated fat in grams for the entire portion)
+- serving_size (string, e.g. "7 pieces (approx 140g) | 1 piece is 150 kcal (20g)")
 - match_confidence (string, e.g. "98% Match")
 - health_score (number between 0 and 100)
 - health_status (string: e.g. "Moderately Healthy", "Very Healthy", "Enjoy in Moderation")
@@ -30,18 +30,41 @@ Return a valid JSON object with the following fields:
 - insights (array of objects with { icon: string, title: string, description: string })
 - alternatives (array of objects with { name: string, calories: number, tag: string })
 
-Rules:
-- If photo is not edible food/drink, set is_food to false and zeros.
-- Calculate macros accurately according to visual size or packaging text.
-- For small portions or mini bars (e.g. 5g Dairy Milk), calculate exact weight macros (~27 kcal).`;
+CRITICAL PORTION & QUANTITY CALCULATION RULES:
+1. MULTI-PIECE & DISH COUNTING: Count ALL visible individual pieces in the image (e.g., if there are 7 Gulab Jamuns, 6 momos, 4 cookies, 3 rotis, count all of them).
+2. TOTAL PORTION MACROS: The returned \`calories\`, \`protein_g\`, \`carbs_g\`, \`fat_g\`, \`fiber_g\`, \`sugar_g\`, \`sodium_mg\`, \`sat_fat_g\` MUST BE FOR THE TOTAL CONSUMED PORTION (NOT JUST 1 SINGLE PIECE!).
+   - Example: 1 piece of Gulab Jamun (20g) = ~150 kcal. If 7 pieces are visible or indicated, return 7 * 150 = 1050 kcal total.
+3. USER TEXT PROMPT INTEGRATION:
+   - Carefully evaluate any user text notes provided alongside the photo.
+   - If user notes specify quantity, counts, or exclusions (e.g. "I had 7 pieces", "I ate all of them except the syrup", "I ate 5 pieces"), calculate total calories and macros specifically based on the user's notes and exclusions!
+4. SERVING SIZE DETAIL:
+   - Always state the total quantity and weight, along with per-unit breakdown if applicable in \`serving_size\`.
+   - Example: "7 pieces (approx 140g) | 1 piece is 150 kcal (20g)"
+5. NON-FOOD / UNCLEAR IMAGES:
+   - If photo is not edible food/drink, set is_food to false and zeros.`;
 
 async function analyzeDirectWithOpenAI(base64Image: string, userPrompt?: string) {
   const apiKey = process.env.OPEN_AI_KEY || process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('OPENAI_API_KEY missing in environment variables');
 
   const userTextPrompt = userPrompt && userPrompt.trim().length > 0
-    ? `Analyze this food photo. Additional context: "${userPrompt.trim()}". Return JSON with name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, sat_fat_g, serving_size, match_confidence, health_score, health_status, health_explanation, ai_recommendation, ingredients, allergens, insights, alternatives.`
-    : 'Analyze this food photo. Return JSON with name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, sat_fat_g, serving_size, match_confidence, health_score, health_status, health_explanation, ai_recommendation, ingredients, allergens, insights, alternatives.';
+    ? `Analyze this food photo.
+
+IMPORTANT USER NOTES/CONTEXT: "${userPrompt.trim()}"
+
+INSTRUCTIONS:
+1. Carefully combine the user notes with the visual photo. If the user mentions quantity, count, or exclusions (e.g. "I had all of them except syrup", "7 pieces"), calculate total calories & macros based on that context.
+2. Count all visible items/pieces (e.g., count 7 Gulab Jamuns).
+3. Calculate TOTAL calories and macros for the ENTIRE consumed portion (e.g. 7 pieces = 1050 kcal total, NOT just 1 piece!).
+4. Describe serving size clearly in serving_size (e.g. "7 pieces (approx 140g) | 1 piece is 150 kcal").
+Return JSON with: is_food, name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, sat_fat_g, serving_size, match_confidence, health_score, health_status, health_explanation, ai_recommendation, ingredients, allergens, insights, alternatives.`
+    : `Analyze this food photo.
+
+INSTRUCTIONS:
+1. Count ALL individual pieces/items visible in the photo (e.g., if a bowl contains 7 Gulab Jamuns, count all 7 pieces).
+2. Calculate TOTAL calories and macros for the ENTIRE portion shown (e.g. 7 pieces = 1050 kcal total, NOT just 1 single piece!).
+3. State the total quantity and per-piece info in serving_size (e.g. "7 pieces (approx 140g) | 1 piece is 150 kcal").
+Return JSON with: is_food, name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, sat_fat_g, serving_size, match_confidence, health_score, health_status, health_explanation, ai_recommendation, ingredients, allergens, insights, alternatives.`;
 
   const openai = new OpenAI({ apiKey, timeout: 40_000 });
   const response = await openai.chat.completions.create({

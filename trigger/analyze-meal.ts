@@ -14,13 +14,13 @@ const SYSTEM_PROMPT = `You are a clinical nutritionist estimating what is on a p
 
 Rules:
 - is_food is false for anything that is not edible food, drink, or packaged food. When false, return zeros and an empty name.
-- Small & Mini Portions / Packaged Items (e.g. 5g Dairy Milk chocolate bar, mini chocolate bite, single piece, candy, snacks, soft drinks, ₹5/₹10 items):
+- Multi-piece Items & Plated Meals:
+  * Visually count ALL individual items visible (e.g., 7 Gulab Jamuns, 6 momos, 4 cookies, 3 rotis).
+  * Calculate TOTAL calories and macros for the COMPLETE portion visible, NOT just a single piece!
+  * For example: 1 Gulab Jamun = ~150 kcal. If 7 pieces are visible in the photo, return 7 * 150 = 1050 kcal total.
+- Small & Mini Portions / Packaged Items (e.g. 5g Dairy Milk chocolate bar, mini chocolate bite, single piece):
   * Read visible packaging text carefully, including net weight (5g, 6.5g, 12g) and price marks (₹5, ₹10).
-  * Pay extreme attention to portion size and scale relative to hands, fingers, or plate size.
-  * DO NOT return a generic 100+ kcal estimate for a small 5g piece! Milk chocolate is ~5.3 kcal/g (5g = ~27 kcal, ~0.4g protein, ~2.9g carbs, ~1.5g fat).
-- Plated & Unpackaged Meals:
-  * Estimate portion size actually visible using the plate, cutlery, or hand for scale. Do not return a generic per-100g figure.
-  * Account for cooking style: fried items (bhatura, samosa), oil-heavy gravies carry far more fat.
+  * DO NOT return a generic 100+ kcal estimate for a small 5g piece! Milk chocolate is ~5.3 kcal/g (5g = ~27 kcal).
 - protein_g * 4 + carbs_g * 4 + fat_g * 9 should land within 10% of calories.`;
 
 /** Snake_case because that is how the model is asked to name them. */
@@ -68,7 +68,7 @@ export const analyzeMeal = schemaTask({
         {
           role: "user",
           content: [
-            { type: "text", text: "Analyze this meal photo. Return JSON with: is_food (boolean), name (string), calories (number), protein_g (number), carbs_g (number), fat_g (number)." },
+            { type: "text", text: "Analyze this meal photo. Count all visible pieces/items and calculate TOTAL calories and macros for the entire portion (NOT a single unit). Return JSON with: is_food (boolean), name (string), calories (number), protein_g (number), carbs_g (number), fat_g (number)." },
             { type: "image_url", image_url: { url: visionUrl(imageUrl) } },
           ],
         },

@@ -61,6 +61,8 @@ export function MealCard({ meal, onPress, onRetake }: MealCardProps) {
           source={{ uri: meal.imageUrl }}
           style={styles.thumbImage}
           contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={200}
         />
       ) : (
         <View style={[styles.thumb, { backgroundColor: accent.tint }]}>

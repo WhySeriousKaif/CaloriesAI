@@ -270,7 +270,13 @@ export function MealDetailModal({ visible, meal, onClose }: MealDetailModalProps
           <View style={styles.heroSectionCard}>
             {meal.imageUrl ? (
               <View style={styles.heroImageContainer}>
-                <Image source={{ uri: meal.imageUrl }} style={styles.heroImage} contentFit="cover" />
+                <Image
+                  source={{ uri: meal.imageUrl }}
+                  style={styles.heroImage}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  transition={200}
+                />
                 <View style={styles.heroImageBadgeRow}>
                   <View style={styles.confidencePill}>
                     <CheckCircle2 size={13} color="#10B981" />
