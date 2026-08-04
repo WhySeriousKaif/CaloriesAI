@@ -61,7 +61,8 @@
           "organization": "o4511834665189376",
           "project": "calorie-ai"
         }
-      ]
+      ],
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,
