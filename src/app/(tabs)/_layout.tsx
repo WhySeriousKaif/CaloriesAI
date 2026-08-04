@@ -3,6 +3,7 @@ import { Redirect, Slot } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import AppTabs from '@/components/app-tabs';
+import { AppLoaderScreen } from '@/components/ui/loader';
 import { Palette } from '@/constants/design';
 import { useProfile } from '@/hooks/use-profile';
 
@@ -11,7 +12,7 @@ export default function TabsLayout() {
   const { profile, loading } = useProfile();
 
   if (!isLoaded || loading) {
-    return <View style={styles.container} />;
+    return <AppLoaderScreen text="Preparing CalorieAI..." />;
   }
   if (!isSignedIn) return <Redirect href="/(auth)/sign-in" />;
 

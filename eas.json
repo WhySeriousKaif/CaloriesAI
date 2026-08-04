@@ -13,6 +13,10 @@
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bXVzaWNhbC1ib2EtOTQuY2xlcmsuYWNjb3VudHMuZGV2JA",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://2bebc6f647e014d3d7448561ab483653@o4511834665189376.ingest.us.sentry.io/4511846419005440"
+      },
       "android": {
         "buildType": "apk"
       },
@@ -22,6 +26,10 @@
     },
     "production": {
       "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bXVzaWNhbC1ib2EtOTQuY2xlcmsuYWNjb3VudHMuZGV2JA",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://2bebc6f647e014d3d7448561ab483653@o4511834665189376.ingest.us.sentry.io/4511846419005440"
+      },
       "android": {
         "buildType": "app-bundle"
       },
