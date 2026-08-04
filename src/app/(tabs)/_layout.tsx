@@ -12,7 +12,7 @@ export default function TabsLayout() {
   const { profile, loading } = useProfile();
 
   if (!isLoaded || loading) {
-    return <AppLoaderScreen text="Preparing CalorieAI..." />;
+    return <AppLoaderScreen text="Preparing Calora..." />;
   }
   if (!isSignedIn) return <Redirect href="/(auth)/sign-in" />;
 

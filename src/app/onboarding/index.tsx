@@ -36,6 +36,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { LoaderFive, LoaderOne } from '@/components/ui/loader';
+import { TypewriterEffect } from '@/components/ui/typewriter-effect';
 import { ClipboardHeader } from '@/components/onboarding/illustrations/ClipboardHeader';
 import { GoalHeader } from '@/components/onboarding/illustrations/GoalHeader';
 import { HeightHeader } from '@/components/onboarding/illustrations/HeightHeader';
@@ -718,9 +720,9 @@ export default function OnboardingScreen() {
         {step === 8 ? (
           <View style={styles.loadingContainer}>
             <View style={styles.spinnerCard}>
-              <ActivityIndicator size="large" color="#073828" />
+              <LoaderOne />
               <Text style={styles.buildingTitle}>Building your plan...</Text>
-              <Text style={styles.loadingMessage}>{loadingMessages[loadingTextIndex]}</Text>
+              <LoaderFive text={loadingMessages[loadingTextIndex]} />
             </View>
           </View>
         ) : null}
@@ -747,7 +749,7 @@ export default function OnboardingScreen() {
               <View style={styles.macroRow}>
                 <View style={styles.macroCard}>
                   <View style={[styles.macroIconBadge, { backgroundColor: '#E4EFE8' }]}>
-                    <Drumstick size={20} color="#1A5D42" strokeWidth={2.2} />
+                    <Flame size={20} color="#1A5D42" strokeWidth={2.2} />
                   </View>
                   <Text style={styles.macroVal}>{calculatedPlan.proteinG}g</Text>
                   <Text style={styles.macroLabel}>Protein</Text>
@@ -772,7 +774,7 @@ export default function OnboardingScreen() {
             {/* Insight Banner */}
             <View style={styles.insightCard}>
               <View style={styles.starBadge}>
-                <Sparkles size={22} color="#F59E0B" strokeWidth={2.2} fill="#FEF3C7" />
+                <TrendingUp size={22} color="#059669" strokeWidth={2.2} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.insightTitle}>This is just the beginning!</Text>
@@ -788,51 +790,51 @@ export default function OnboardingScreen() {
         {step === 10 ? (
           <View style={styles.stepContainer}>
             <View style={styles.headerBox}>
-              <Text style={styles.title}>{"Here's what your plan includes"}</Text>
+              <TypewriterEffect
+                words={[
+                  { text: 'Your' },
+                  { text: 'plan' },
+                  { text: 'is' },
+                  { text: 'ready!', style: { color: '#059669' } },
+                ]}
+                cursorColor="#059669"
+              />
               <Text style={styles.subtitle}>
                 Your personalized plan to help you reach {displayGoalWeightValue} {weightUnit}.
               </Text>
             </View>
 
-            <View style={styles.featuresList}>
-              <View style={styles.featureItem}>
-                <View style={styles.featureIconBox}>
-                  <Target size={22} color="#059669" />
+            <View style={styles.featuresGrid}>
+              <View style={styles.featureGridCard}>
+                <View style={[styles.featureIconBadge, { backgroundColor: '#E4EFE8' }]}>
+                  <Flame size={24} color="#059669" strokeWidth={2.2} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.featureTitle}>Calorie Tracking</Text>
-                  <Text style={styles.featureSub}>Track effortlessly and stay on target</Text>
-                </View>
+                <Text style={styles.gridCardTitle}>Calorie Tracking</Text>
+                <Text style={styles.gridCardSub}>Track effortlessly and stay on target</Text>
               </View>
 
-              <View style={styles.featureItem}>
-                <View style={styles.featureIconBox}>
-                  <Camera size={22} color="#059669" />
+              <View style={styles.featureGridCard}>
+                <View style={[styles.featureIconBadge, { backgroundColor: '#FDF0D5' }]}>
+                  <Camera size={24} color="#D97706" strokeWidth={2.2} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.featureTitle}>AI Food Scanner</Text>
-                  <Text style={styles.featureSub}>Scan meals and get instant nutrition</Text>
-                </View>
+                <Text style={styles.gridCardTitle}>AI Food Scanner</Text>
+                <Text style={styles.gridCardSub}>Scan meals and get instant nutrition</Text>
               </View>
 
-              <View style={styles.featureItem}>
-                <View style={styles.featureIconBox}>
-                  <TrendingUp size={22} color="#059669" />
+              <View style={styles.featureGridCard}>
+                <View style={[styles.featureIconBadge, { backgroundColor: '#E0F2FE' }]}>
+                  <TrendingUp size={24} color="#0284C7" strokeWidth={2.2} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.featureTitle}>Progress Tracking</Text>
-                  <Text style={styles.featureSub}>Monitor your progress and stay motivated</Text>
-                </View>
+                <Text style={styles.gridCardTitle}>Progress Tracker</Text>
+                <Text style={styles.gridCardSub}>Monitor your progress & stay motivated</Text>
               </View>
 
-              <View style={styles.featureItem}>
-                <View style={styles.featureIconBox}>
-                  <Bell size={22} color="#059669" />
+              <View style={styles.featureGridCard}>
+                <View style={[styles.featureIconBadge, { backgroundColor: '#EDE7FB' }]}>
+                  <Bell size={24} color="#7C3AED" strokeWidth={2.2} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.featureTitle}>Smart Reminders</Text>
-                  <Text style={styles.featureSub}>Daily reminders to keep you consistent</Text>
-                </View>
+                <Text style={styles.gridCardTitle}>Smart Reminders</Text>
+                <Text style={styles.gridCardSub}>Daily reminders to keep you consistent</Text>
               </View>
             </View>
           </View>
@@ -1127,38 +1129,46 @@ const styles = StyleSheet.create({
     color: '#047857',
     marginTop: 2,
   },
-  featuresList: {
+  featuresGrid: {
     width: '100%',
-    gap: 12,
-  },
-  featureItem: {
     flexDirection: 'row',
-    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 8,
+  },
+  featureGridCard: {
+    width: '48%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     padding: 16,
-    gap: 14,
+    alignItems: 'flex-start',
+    gap: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  featureIconBox: {
+  featureIconBadge: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#F0FDF4',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 4,
   },
-  featureTitle: {
-    fontSize: 16,
+  gridCardTitle: {
+    fontSize: 15,
     fontWeight: '700',
     color: '#0A3527',
   },
-  featureSub: {
-    fontSize: 13,
+  gridCardSub: {
+    fontSize: 12,
     fontWeight: '500',
-    color: '#4B5563',
-    marginTop: 2,
+    color: '#6B7280',
+    lineHeight: 16,
   },
   bottomActionBox: {
     marginTop: 24,

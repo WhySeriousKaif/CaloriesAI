@@ -34,6 +34,7 @@ import {
 import { BottomTabInset, MaxContentWidth } from '@/constants/theme';
 import { MealItem, useMeals } from '@/hooks/use-meals';
 
+import { LoaderFour } from '@/components/ui/loader';
 import { formatLocalDateKey } from '@/components/home/DateStrip';
 import { MealDetailModal } from '@/components/home/MealDetailModal';
 
@@ -181,7 +182,7 @@ export default function HistoryScreen() {
 
         {loading ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" color={Palette.brand} />
+            <LoaderFour size={36} color={Palette.brand} />
             <Text style={styles.loadingText}>Loading meal history...</Text>
           </View>
         ) : grouped.length === 0 ? (

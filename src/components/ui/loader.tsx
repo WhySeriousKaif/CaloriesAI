@@ -5,7 +5,7 @@ import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { Palette } from '@/constants/design';
 
 /**
- * LoaderOne: 3 bouncing dots animated in a smooth loop (React Native equivalent)
+ * LoaderOne: 3 bouncing dots animated in a smooth loop
  */
 export function LoaderOne() {
   const anim1 = useRef(new Animated.Value(0)).current;
@@ -60,6 +60,105 @@ export function LoaderOne() {
 }
 
 /**
+ * LoaderTwo: Rotating circular ring loader
+ */
+export function LoaderTwo({ size = 28, color = Palette.brand }: { size?: number; color?: string }) {
+  const spinAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const spin = Animated.loop(
+      Animated.timing(spinAnim, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    spin.start();
+    return () => spin.stop();
+  }, [spinAnim]);
+
+  const spin = spinAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: Math.max(2, size / 9),
+          borderColor: color + '25',
+          borderTopColor: color,
+          transform: [{ rotate: spin }],
+        }}
+      />
+    </View>
+  );
+}
+
+/**
+ * LoaderFour: Glowing pulse orb loader
+ */
+export function LoaderFour({ size = 32, color = Palette.brand }: { size?: number; color?: string }) {
+  const scaleAnim = useRef(new Animated.Value(0.85)).current;
+  const opacityAnim = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(scaleAnim, {
+            toValue: 1.25,
+            duration: 700,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 0.85,
+            duration: 700,
+            easing: Easing.in(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(opacityAnim, {
+            toValue: 1,
+            duration: 700,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacityAnim, {
+            toValue: 0.4,
+            duration: 700,
+            useNativeDriver: true,
+          }),
+        ]),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [scaleAnim, opacityAnim]);
+
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View
+        style={{
+          width: size * 0.7,
+          height: size * 0.7,
+          borderRadius: (size * 0.7) / 2,
+          backgroundColor: color,
+          opacity: opacityAnim,
+          transform: [{ scale: scaleAnim }],
+        }}
+      />
+    </View>
+  );
+}
+
+/**
  * LoaderFive: Pulsing animated text loader
  */
 export function LoaderFive({ text = 'Loading...' }: { text?: string }) {
@@ -91,6 +190,22 @@ export function LoaderFive({ text = 'Loading...' }: { text?: string }) {
   );
 }
 
+export function LoaderOneDemo() {
+  return <LoaderOne />;
+}
+
+export function LoaderTwoDemo() {
+  return <LoaderTwo />;
+}
+
+export function LoaderFourDemo() {
+  return <LoaderFour />;
+}
+
+export function LoaderFiveDemo() {
+  return <LoaderFive text="Generating meal data..." />;
+}
+
 /**
  * Full Page App Loading Screen with Light Theme (#FAF9F6), Brand Icon & Animated Loader
  */
@@ -105,7 +220,7 @@ export function AppLoaderScreen({ text = 'Loading...' }: { text?: string }) {
             contentFit="contain"
           />
         </View>
-        <Text style={styles.brandTitle}>CalorieAI</Text>
+        <Text style={styles.brandTitle}>Calora</Text>
       </View>
 
       <View style={styles.loaderBox}>
@@ -114,10 +229,6 @@ export function AppLoaderScreen({ text = 'Loading...' }: { text?: string }) {
       </View>
     </View>
   );
-}
-
-export function LoaderOneDemo() {
-  return <LoaderOne />;
 }
 
 const styles = StyleSheet.create({
@@ -169,3 +280,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 });
+

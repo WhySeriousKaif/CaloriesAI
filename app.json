@@ -58,7 +58,7 @@
       [
         "@sentry/react-native/expo",
         {
-          "url": "https://sentry.io/",
+          "organization": "o4511834665189376",
           "project": "calorie-ai"
         }
       ]

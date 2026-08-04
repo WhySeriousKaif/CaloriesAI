@@ -3,9 +3,12 @@ import { Image } from 'expo-image';
 import { Redirect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowRight } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppLoaderScreen } from '@/components/ui/loader';
+import { SquigglyText } from '@/components/ui/squiggly-text';
 import { Welcome } from '@/constants/welcome';
 
 /**
@@ -16,7 +19,31 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
 
-  if (!isLoaded) return null;
+  // Subtle button pulse / slide animation
+  const arrowAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(arrowAnim, {
+          toValue: 5,
+          duration: 750,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(arrowAnim, {
+          toValue: 0,
+          duration: 750,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [arrowAnim]);
+
+  if (!isLoaded) return <AppLoaderScreen text="Loading Calora..." />;
   if (isSignedIn) return <Redirect href="/(tabs)" />;
 
   return (
@@ -53,7 +80,13 @@ export default function WelcomeScreen() {
       {/* 3. Bottom Section (Headline & Buttons right under phone) */}
       <View style={styles.bottomSection}>
         <Text style={styles.headline}>
-          Snap, Analyze,{'\n'}Hit Your Goals
+          <SquigglyText scale={[5, 8]} stepDuration={70} color="#073828">
+            Snap
+          </SquigglyText>
+          , Analyze{'\n'}Hit Your{' '}
+          <SquigglyText scale={[5, 8]} stepDuration={70} color="#073828">
+            Goals
+          </SquigglyText>
         </Text>
 
         <Text style={styles.subtitle}>
@@ -67,11 +100,13 @@ export default function WelcomeScreen() {
           <View style={styles.ctaLabelBox}>
             <Text style={styles.ctaLabel}>Get Started</Text>
           </View>
-          <ArrowRight
-            color={Welcome.onBrand}
-            size={Welcome.arrowSize}
-            strokeWidth={2.5}
-          />
+          <Animated.View style={{ transform: [{ translateX: arrowAnim }] }}>
+            <ArrowRight
+              color={Welcome.onBrand}
+              size={Welcome.arrowSize}
+              strokeWidth={2.5}
+            />
+          </Animated.View>
         </Pressable>
 
         <Text style={styles.footerText}>
@@ -178,3 +213,4 @@ const styles = StyleSheet.create({
     color: '#073828',
   },
 });
+

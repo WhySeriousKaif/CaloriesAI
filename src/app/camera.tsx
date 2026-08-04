@@ -62,7 +62,8 @@ function InsightIcon({ icon }: { icon: string }) {
   return <Sparkles size={18} color="#1A5D42" />;
 }
 
-import { Layout, Palette, Radius } from '@/constants/design';
+import { LoaderTwo } from '@/components/ui/loader';
+import { CardShadow, Layout, NumeralFont, Palette, Radius } from '@/constants/design';
 
 type AnalyzedMeal = {
   id?: string;
@@ -781,7 +782,7 @@ export default function CameraScreen() {
               onPress={handleAnalyzeFood}>
               {analyzing ? (
                 <>
-                  <ActivityIndicator color="#FFFFFF" size="small" />
+                  <LoaderTwo size={20} color="#FFFFFF" />
                   <Text style={styles.analyzeButtonText}>Analyzing...</Text>
                 </>
               ) : (

@@ -63,8 +63,11 @@ export function RulerPicker({
 
         {/* Ruler ticks container */}
         <View style={styles.rulerContainer}>
-          {/* Central Active Indicator Line */}
-          <View style={styles.centerIndicator} />
+          {/* Central Active Pointer Arrow Needle */}
+          <View style={styles.centerIndicator}>
+            <View style={styles.pointerNeedle} />
+            <View style={styles.pointerCap} />
+          </View>
 
           <View style={styles.ticksRow}>
             {ticks.map((tickVal) => {
@@ -175,13 +178,31 @@ const styles = StyleSheet.create({
   centerIndicator: {
     position: 'absolute',
     left: '50%',
-    top: 8,
-    bottom: 8,
-    width: 3,
-    backgroundColor: '#073828',
-    borderRadius: 1.5,
+    top: 2,
+    width: 14,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
     zIndex: 10,
-    marginLeft: -1.5,
+    marginLeft: -7,
+  },
+  pointerNeedle: {
+    width: 3,
+    height: 32,
+    backgroundColor: '#059669',
+    borderRadius: 1.5,
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  pointerCap: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#073828',
+    marginTop: -4,
   },
   ticksRow: {
     flexDirection: 'row',
