@@ -31,7 +31,7 @@
         "EXPO_PUBLIC_SENTRY_DSN": "https://2bebc6f647e014d3d7448561ab483653@o4511834665189376.ingest.us.sentry.io/4511846419005440"
       },
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "apk"
       },
       "ios": {
         "simulator": false

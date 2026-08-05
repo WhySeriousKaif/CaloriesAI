@@ -1,56 +1,106 @@
-# Welcome to your Expo app 👋
+# 🥑 Calora — AI-Powered Mobile Calorie & Macro Tracker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+> **Calora** is a smart cross-platform mobile application (Android APK & iOS) designed to make health and nutrition tracking effortless. Powered by vision AI, users can instantly calculate calories, macros, and nutrients simply by taking a photo of their meal, scanning a barcode, or using voice/text descriptions.
 
-## Get started
+---
 
-1. Install dependencies
+## 📱 Mobile App Showcase & Architecture
 
+Calora is built as a native mobile app for **Android (APK)** and **iOS**, optimized for real-time mobile performance with camera integration, smooth gesture interactions, offline storage, and secure cloud sync.
+
+### Key Mobile Features
+- 📸 **AI Photo Meal Scanner**: Point the camera at any meal to automatically detect food items, portion sizes, calories, protein, carbs, and fats.
+- 🏷️ **Barcode & Voice Logging**: Scan product barcodes or describe your meal in plain English via text or voice.
+- 📊 **Macro & Hydration Analytics**: Track daily caloric intake, macro splits (protein/carbs/fats), water intake, and body weight progress over time.
+- 🔥 **Streak & Goal Engine**: Gamified daily goal tracking with streak maintenance and motivational progress indicators.
+- 🔐 **Secure Authentication & Sync**: Seamless user authentication powered by Clerk with cloud profile synchronization.
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| **Mobile Framework** | [React Native](https://reactnative.dev/) with [Expo SDK 57](https://expo.dev/) (Bare Workflow / Custom Native Native Modules) |
+| **Routing** | [Expo Router](https://docs.expo.dev/router/introduction/) (File-based navigation) |
+| **Styling** | [NativeWind v4](https://www.nativewind.dev/) (Tailwind CSS for React Native) |
+| **State & Data Fetching** | [TanStack React Query v5](https://tanstack.com/query) |
+| **Authentication** | [@clerk/expo](https://clerk.com/) |
+| **Database & ORM** | [Neon PostgreSQL](https://neon.tech/) & [Drizzle ORM](https://orm.drizzle.team/) |
+| **AI Integration** | OpenAI Vision & Multimodal API |
+| **Monitoring & Crash Reporting** | [@sentry/react-native](https://sentry.io/) |
+| **Background Jobs** | [Trigger.dev](https://trigger.dev/) |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js `>= 18`
+- Expo Go app on mobile OR Android Studio / Xcode for emulator/device testing.
+- EAS CLI installed: `npm install -g eas-cli`
+
+### Installation
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/your-username/CalorieAI.git
+   cd CalorieAI
+   ```
+
+2. **Install Dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
-
-   ```bash
-   npx expo start
+3. **Configure Environment Variables**
+   Create a `.env` file in the project root:
+   ```env
+   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_key
+   DATABASE_URL=your_neon_db_url
+   OPEN_AI_KEY=your_openai_key
+   EXPO_PUBLIC_SENTRY_DSN=your_sentry_dsn
    ```
 
-In the output, you'll find options to open the app in a
+4. **Run the Mobile Development Server**
+   ```bash
+   # Start Expo development server
+   npm start
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   # Run on Android Device / Emulator
+   npm run android
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+   # Run on iOS Simulator
+   npm run ios
+   ```
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## 📦 Building the Android APK & iOS App
+
+To compile a standalone **Android APK** or **iOS Build** using Expo Application Services (EAS):
 
 ```bash
-npm run reset-project
+# Build standalone Android APK
+npx eas-cli build --platform android --profile preview
+
+# Build iOS standalone app
+npx eas-cli build --platform ios --profile preview
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-### Other setup steps
+## 🌐 Web Landing Page Deployment
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+The official web presentation landing page for Calora is located in the [`legal/`](./legal) folder. It is deployed to **Vercel** via [`vercel.json`](./vercel.json).
 
-## Learn more
+```bash
+# Deploy landing page to Vercel via CLI
+npx vercel
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 📄 License
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This project is licensed under the MIT License.
