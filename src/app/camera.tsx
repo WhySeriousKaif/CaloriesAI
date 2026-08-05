@@ -106,9 +106,11 @@ type AnalyzedMeal = {
 
 async function assetUriToBase64(uri: string, existingBase64?: string | null): Promise<string> {
   if (existingBase64) {
-    return existingBase64.startsWith('data:')
-      ? existingBase64
-      : `data:image/jpeg;base64,${existingBase64}`;
+    if (existingBase64.startsWith('data:image/')) {
+      return existingBase64;
+    }
+    const cleanBase64 = existingBase64.replace(/^data:[^;]+;base64,/, '');
+    return `data:image/jpeg;base64,${cleanBase64}`;
   }
 
   const response = await fetch(uri);
@@ -118,7 +120,12 @@ async function assetUriToBase64(uri: string, existingBase64?: string | null): Pr
     const reader = new FileReader();
     reader.onloadend = () => {
       if (typeof reader.result === 'string') {
-        resolve(reader.result);
+        let resultStr = reader.result;
+        if (!resultStr.startsWith('data:image/')) {
+          const rawBase64 = resultStr.includes('base64,') ? resultStr.split('base64,')[1] : resultStr;
+          resultStr = `data:image/jpeg;base64,${rawBase64}`;
+        }
+        resolve(resultStr);
       } else {
         reject(new Error('Failed to convert image to base64 string'));
       }
@@ -138,7 +145,14 @@ const pickFileWeb = (): Promise<string | null> => {
       const file = e.target?.files?.[0];
       if (!file) return resolve(null);
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
+      reader.onloadend = () => {
+        let resultStr = reader.result as string;
+        if (resultStr && !resultStr.startsWith('data:image/')) {
+          const rawBase64 = resultStr.includes('base64,') ? resultStr.split('base64,')[1] : resultStr;
+          resultStr = `data:image/jpeg;base64,${rawBase64}`;
+        }
+        resolve(resultStr);
+      };
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(file);
     };
@@ -320,6 +334,7 @@ export default function CameraScreen() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         quality: 0.5,
+        base64: true,
       });
 
       if (!result.canceled && result.assets[0]?.uri) {
