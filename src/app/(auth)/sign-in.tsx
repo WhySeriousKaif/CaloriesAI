@@ -18,6 +18,7 @@ import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 
 import { AppleMark, GoogleMark } from '@/components/auth/BrandMarks';
+import { LegalModal } from '@/components/common/LegalModal';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -42,6 +43,7 @@ export default function SignInScreen() {
 
   const [pending, setPending] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [legalType, setLegalType] = useState<'privacy' | 'terms' | null>(null);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
@@ -196,10 +198,16 @@ export default function SignInScreen() {
 
         <Text style={styles.legalText}>
           By continuing you agree to our{' '}
-          <Text style={styles.legalLink}>Terms</Text> and{' '}
-          <Text style={styles.legalLink}>Privacy Policy</Text>.
+          <Text style={styles.legalLink} onPress={() => setLegalType('terms')}>Terms</Text> and{' '}
+          <Text style={styles.legalLink} onPress={() => setLegalType('privacy')}>Privacy Policy</Text>.
         </Text>
       </View>
+
+      <LegalModal
+        visible={!!legalType}
+        type={legalType}
+        onClose={() => setLegalType(null)}
+      />
     </View>
   );
 }

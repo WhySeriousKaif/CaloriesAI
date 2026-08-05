@@ -75,6 +75,7 @@ export default function TabsLayout() {
           name="history"
           options={{
             title: 'History',
+            tabBarItemStyle: { paddingRight: 18 },
             tabBarIcon: ({ color, size }) => <Clock size={size || 22} color={color} />,
           }}
         />
@@ -82,6 +83,7 @@ export default function TabsLayout() {
           name="analytics"
           options={{
             title: 'Analytics',
+            tabBarItemStyle: { paddingLeft: 18 },
             tabBarIcon: ({ color, size }) => <BarChart2 size={size || 22} color={color} />,
           }}
         />

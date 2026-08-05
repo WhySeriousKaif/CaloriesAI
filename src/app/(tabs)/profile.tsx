@@ -54,6 +54,7 @@ import {
 } from '@/constants/design';
 import { BottomTabInset, MaxContentWidth } from '@/constants/theme';
 import { toNumber, useProfile } from '@/hooks/use-profile';
+import { LegalModal } from '@/components/common/LegalModal';
 
 /** Turn a stored enum-ish string into something readable. */
 function titleCase(value: string | null | undefined, fallback = '—') {
@@ -162,14 +163,10 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleOpenLegal = (path: string) => {
-    if (Platform.OS === 'web') {
-      window.open(path, '_blank');
-    } else {
-      Linking.openURL(path).catch(() => {
-        Alert.alert('Notice', `Opening ${path}`);
-      });
-    }
+  const [legalType, setLegalType] = useState<'privacy' | 'terms' | null>(null);
+
+  const handleOpenLegal = (type: 'privacy' | 'terms') => {
+    setLegalType(type);
   };
 
   /**
@@ -385,7 +382,7 @@ export default function ProfileScreen() {
             {/* Privacy Policy */}
             <Pressable
               style={({ pressed }) => [styles.rowItem, pressed && styles.rowPressed]}
-              onPress={() => handleOpenLegal('/legal/privacy.html')}>
+              onPress={() => handleOpenLegal('privacy')}>
               <View style={styles.rowIconBox}>
                 <ShieldCheck size={18} color={Palette.text} strokeWidth={2} />
               </View>
@@ -398,7 +395,7 @@ export default function ProfileScreen() {
             {/* Terms of Service */}
             <Pressable
               style={({ pressed }) => [styles.rowItem, pressed && styles.rowPressed]}
-              onPress={() => handleOpenLegal('/legal/terms.html')}>
+              onPress={() => handleOpenLegal('terms')}>
               <View style={styles.rowIconBox}>
                 <FileText size={18} color={Palette.text} strokeWidth={2} />
               </View>
@@ -789,6 +786,13 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* 6. LEGAL DOCUMENTS MODAL */}
+      <LegalModal
+        visible={!!legalType}
+        type={legalType}
+        onClose={() => setLegalType(null)}
+      />
     </View>
   );
 }
