@@ -1,5 +1,5 @@
 import React, { useId } from 'react';
-import { Animated, Easing, Platform, StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
+import { Platform, Text, TextStyle, ViewStyle } from 'react-native';
 
 export interface SquigglyTextProps {
   children: React.ReactNode;
@@ -13,7 +13,11 @@ export interface SquigglyTextProps {
   color?: string;
 }
 
-export function SquigglyText({
+/**
+ * Web renders the real effect: an SVG feTurbulence + feDisplacementMap filter
+ * cycled through a few seeds to make the glyphs wobble.
+ */
+function SquigglyTextWeb({
   children,
   steps = 5,
   stepDuration = 80,
@@ -21,95 +25,62 @@ export function SquigglyText({
   baseFrequency = 0.02,
   numOctaves = 3,
   style,
-  containerStyle,
   color,
 }: SquigglyTextProps) {
   const reactId = useId();
   const safeId = reactId.replace(/[:_]/g, '');
-
-  if (Platform.OS === 'web') {
-    const filterId = (i: number) => `squiggly-${safeId}-${i}`;
-    const [currentStep, setCurrentStep] = React.useState(0);
-
-    React.useEffect(() => {
-      const interval = setInterval(() => {
-        setCurrentStep((prev) => (prev + 1) % steps);
-      }, stepDuration);
-      return () => clearInterval(interval);
-    }, [steps, stepDuration]);
-
-    const scaleAt = (i: number) =>
-      Array.isArray(scale) ? scale[i % scale.length] : scale;
-
-    const activeFilterUrl = `url(#${filterId(currentStep)})`;
-
-    return (
-      <Text style={[{ filter: activeFilterUrl, ...(color ? { color } : {}) }, style]}>
-        <svg
-          aria-hidden="true"
-          style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}
-          xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            {Array.from({ length: steps }).map((_, i) => (
-              <filter id={filterId(i)} key={i}>
-                <feTurbulence
-                  baseFrequency={baseFrequency}
-                  numOctaves={numOctaves}
-                  result="noise"
-                  seed={i}
-                />
-                <feDisplacementMap
-                  in="SourceGraphic"
-                  in2="noise"
-                  scale={scaleAt(i)}
-                />
-              </filter>
-            ))}
-          </defs>
-        </svg>
-        {children}
-      </Text>
-    );
-  }
-
-  // Mobile Native animated wobble/wave fallback
-  const wobbleAnim = React.useRef(new Animated.Value(0)).current;
+  const filterId = (i: number) => `squiggly-${safeId}-${i}`;
+  const [currentStep, setCurrentStep] = React.useState(0);
 
   React.useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(wobbleAnim, {
-          toValue: 1,
-          duration: 300,
-          easing: Easing.sin,
-          useNativeDriver: true,
-        }),
-        Animated.timing(wobbleAnim, {
-          toValue: -1,
-          duration: 300,
-          easing: Easing.sin,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [wobbleAnim]);
+    const interval = setInterval(() => {
+      setCurrentStep((prev) => (prev + 1) % steps);
+    }, stepDuration);
+    return () => clearInterval(interval);
+  }, [steps, stepDuration]);
 
-  const translateY = wobbleAnim.interpolate({
-    inputRange: [-1, 1],
-    outputRange: [-1.5, 1.5],
-  });
-
-  const rotate = wobbleAnim.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ['-1deg', '1deg'],
-  });
+  const scaleAt = (i: number) => (Array.isArray(scale) ? scale[i % scale.length] : scale);
 
   return (
-    <Animated.Text style={[{ transform: [{ translateY }, { rotate }] }, color ? { color } : {}, style]}>
+    <Text style={[{ filter: `url(#${filterId(currentStep)})`, ...(color ? { color } : {}) }, style]}>
+      <svg
+        aria-hidden="true"
+        style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}
+        xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          {Array.from({ length: steps }).map((_, i) => (
+            <filter id={filterId(i)} key={i}>
+              <feTurbulence
+                baseFrequency={baseFrequency}
+                numOctaves={numOctaves}
+                result="noise"
+                seed={i}
+              />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale={scaleAt(i)} />
+            </filter>
+          ))}
+        </defs>
+      </svg>
       {children}
-    </Animated.Text>
+    </Text>
   );
 }
 
+/**
+ * Native has no equivalent of an SVG displacement filter on text, and this
+ * component is always used *inside* a parent <Text>. React Native only honours
+ * a small set of style props on nested text — colour and the font/spacing
+ * family — so the previous Animated.Text `transform` wobble was silently
+ * dropped on iOS and could stop the span rendering altogether on Android,
+ * which is why "Snap" and "Goals" went missing on device.
+ *
+ * Rendering plain inline text keeps the words visible and correctly coloured.
+ * Any wobble here would have to be drawn per-glyph with react-native-svg, which
+ * would break inline text flow — not worth it for a decorative effect.
+ */
+function SquigglyTextNative({ children, style, color }: SquigglyTextProps) {
+  return <Text style={[color ? { color } : null, style]}>{children}</Text>;
+}
+
+export const SquigglyText =
+  Platform.OS === 'web' ? SquigglyTextWeb : SquigglyTextNative;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Flame, Info, Leaf } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 import Svg, { Circle } from 'react-native-svg';
 
 import {
@@ -59,10 +60,14 @@ export function CalorieRingCard({ consumed, target, loading }: CalorieRingCardPr
             </View>
           ) : (
             <>
-              <Text style={styles.bigNumber}>
+              <Text
+                style={styles.bigNumber}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}>
                 {hasTarget ? (overBudget ? consumed - target : remaining) : '—'}
               </Text>
-              <Text style={styles.ofTarget}>
+              <Text style={styles.ofTarget} numberOfLines={1}>
                 {hasTarget ? `of ${target.toLocaleString()} kcal` : 'no target set'}
               </Text>
             </>
@@ -162,6 +167,7 @@ const styles = StyleSheet.create({
     color: Palette.brand,
     letterSpacing: -1.5,
     fontFamily: NumeralFont,
+    includeFontPadding: false,
   },
   ofTarget: {
     fontSize: 13,

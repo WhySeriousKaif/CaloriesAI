@@ -1,6 +1,7 @@
-import { getCache, setCache } from '@/lib/cache';
 import { useAuth } from '@clerk/expo';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { getCache, setCache } from '@/lib/cache';
 
 /**
  * The `users` row as `GET /api/profile` returns it. Numeric columns arrive as
@@ -33,9 +34,19 @@ const CACHE_KEY = 'user_profile';
 /**
  * Reads the signed-in user's profile and targets.
  *
- * Uses Stale-While-Revalidate caching:
- * 1. Loads instantly from local storage (0ms spinner)
- * 2. Fetches updates silently in the background
+ * Stale-while-revalidate: the cached copy renders immediately, then a fetch
+ * refreshes it in the background.
+ *
+ * The distinction that matters
+ * ----------------------------
+ * `profile === null` means **this user has genuinely never onboarded** — only a
+ * 404 produces it. Any other failure (network drop, 5xx, unparseable body)
+ * leaves `profile` untouched and sets `error` instead.
+ *
+ * That separation is load-bearing. `(tabs)/_layout.tsx` sends users with no
+ * profile to onboarding, so if a failed request also cleared `profile`, a dead
+ * database or a lost connection would silently throw a fully-onboarded user
+ * back to step one and look like their account had been wiped.
  */
 export function useProfile() {
   const { isLoaded, isSignedIn, getToken, userId } = useAuth();
@@ -44,121 +55,106 @@ export function useProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load from local storage cache immediately on mount
+  // Ignores responses from a request that a newer one has already superseded,
+  // and from requests still in flight after unmount.
+  const requestId = useRef(0);
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  // Paint from cache first so the app doesn't hold a spinner over a round trip.
   useEffect(() => {
     if (!userId) return;
     let active = true;
     void getCache<Profile>(`${CACHE_KEY}_${userId}`).then((cached) => {
-      if (active && cached) {
-        setProfile(cached);
-        setLoading(false);
-      }
+      if (!active || !cached) return;
+      setProfile((current) => current ?? cached);
+      setLoading(false);
     });
     return () => {
       active = false;
     };
   }, [userId]);
 
+  // Only ever runs for a signed-in user. The signed-out case is derived at the
+  // return instead of stored, so nothing here touches state before the first
+  // `await` — a synchronous setState in an effect body cascades renders.
   const load = useCallback(async () => {
     if (!isLoaded || !isSignedIn) return;
 
+    const id = ++requestId.current;
+    const isCurrent = () => mounted.current && requestId.current === id;
+
     try {
       const token = await getToken();
-      if (!token) return;
+      if (!isCurrent()) return;
 
-      const response = await fetch('/api/profile', {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
-
-      if (!response) return;
-
-      if (response.status === 404) {
-        setProfile(null);
+      if (!token) {
+        // Clerk is signed in but hasn't minted a token yet. Not an error — the
+        // hook re-runs when auth settles.
+        setLoading(false);
         return;
       }
 
-      if (!response.ok) return;
+      const response = await fetch('/api/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!isCurrent()) return;
 
-      const rawData = await response.json().catch(() => null);
-      if (rawData) {
-        const parsedProfile = (typeof rawData === 'object' && 'profile' in rawData ? rawData.profile : rawData) as Profile | null;
-        setProfile(parsedProfile);
-        if (parsedProfile && userId) {
-          void setCache(`${CACHE_KEY}_${userId}`, parsedProfile);
-        }
+      // The only response that legitimately means "no profile exists".
+      if (response.status === 404) {
+        setProfile(null);
+        setError(null);
+        return;
+      }
+
+      if (!response.ok) {
+        setError(`Couldn't reach Calora (error ${response.status}).`);
+        return;
+      }
+
+      const body = (await response.json()) as unknown;
+      if (!isCurrent()) return;
+
+      const parsed = (
+        body && typeof body === 'object' && 'profile' in body
+          ? (body as { profile: Profile | null }).profile
+          : body
+      ) as Profile | null;
+
+      setProfile(parsed);
+      setError(null);
+      if (parsed && userId) {
+        void setCache(`${CACHE_KEY}_${userId}`, parsed);
       }
     } catch (err) {
+      if (!isCurrent()) return;
       console.warn('[use-profile] Failed to load profile:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load profile');
+      setError("Couldn't reach Calora. Check your connection.");
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
   }, [isLoaded, isSignedIn, getToken, userId]);
 
   useEffect(() => {
-    let isCancelled = false;
+    void load();
+  }, [load]);
 
-    if (!isLoaded) return;
+  // Signing out is a synchronous fact about auth, not something to fetch — so
+  // it's derived rather than written into state by an effect.
+  const signedOut = isLoaded && !isSignedIn;
 
-    async function fetchProfile() {
-      if (!isSignedIn) {
-        if (!isCancelled) setLoading(false);
-        return;
-      }
-
-      try {
-        const token = await getToken();
-        if (!token || isCancelled) {
-          if (!isCancelled) setLoading(false);
-          return;
-        }
-
-        const response = await fetch('/api/profile', {
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch((err) => {
-          console.warn('[use-profile] Network fetch exception:', err);
-          return null;
-        });
-
-        if (!response || isCancelled) {
-          if (!isCancelled) setLoading(false);
-          return;
-        }
-
-        if (response.status === 404) {
-          if (!isCancelled) setProfile(null);
-          return;
-        }
-
-        if (!response.ok) {
-          if (!isCancelled) setLoading(false);
-          return;
-        }
-
-        const rawData = await response.json().catch(() => null);
-        if (!isCancelled && rawData) {
-          const parsedProfile = (typeof rawData === 'object' && 'profile' in rawData ? rawData.profile : rawData) as Profile | null;
-          setProfile(parsedProfile);
-          if (parsedProfile && userId) {
-            void setCache(`${CACHE_KEY}_${userId}`, parsedProfile);
-          }
-        }
-      } catch (err) {
-        console.warn('[use-profile] Failed to load profile:', err);
-        if (!isCancelled) setError(err instanceof Error ? err.message : 'Failed to load profile');
-      } finally {
-        if (!isCancelled) setLoading(false);
-      }
-    }
-
-    void fetchProfile();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [isLoaded, isSignedIn, getToken, userId]);
-
-  return { profile, loading, error, reload: load };
+  return {
+    profile: signedOut ? null : profile,
+    loading: signedOut ? false : loading,
+    error: signedOut ? null : error,
+    reload: load,
+  };
 }
 
 /** `numeric` columns come back as strings; render-safe parse. */

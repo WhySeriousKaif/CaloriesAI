@@ -51,7 +51,9 @@ export const CardShadow = Platform.select({
     shadowOpacity: 0.05,
     shadowRadius: 12,
   },
-  android: { elevation: 2 },
+  android: {
+    elevation: 2,
+  },
   default: {
     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
   },
@@ -60,11 +62,14 @@ export const CardShadow = Platform.select({
 export const NumeralFont = Platform.select({
   web: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
   ios: 'ui-rounded',
+  android: 'normal',
   default: undefined,
 });
 
 export const DisplayFont = Platform.select({
   web: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
   ios: 'System',
+  android: 'normal',
   default: undefined,
 });
+

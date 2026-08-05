@@ -15,7 +15,7 @@ export function IPhoneMockup() {
         <View style={styles.screenDisplay}>
           {/* Healthy Meal Camera Photography */}
           <Image
-            source={require('@/assets/images/healthy-meal-camera.png')}
+            source={require('../../assets/images/healthy-meal-camera.png')}
             style={styles.foodImage}
             contentFit="cover"
             alt="Healthy meal camera preview"

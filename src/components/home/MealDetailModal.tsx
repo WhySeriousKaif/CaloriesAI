@@ -14,7 +14,8 @@ import {
   X,
   Zap,
 } from 'lucide-react-native';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function InsightIcon({ icon }: { icon: string }) {
@@ -608,11 +609,13 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#1A1A1A',
     letterSpacing: -1,
+    includeFontPadding: false,
   },
   caloriesUnit: {
     fontSize: 18,
     fontWeight: '700',
     color: '#D97706',
+    includeFontPadding: false,
   },
   caloriesSubtext: {
     fontSize: 13,
@@ -629,7 +632,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 20,
     paddingVertical: 14,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     alignItems: 'center',
     borderWidth: 1,
   },
@@ -637,11 +640,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     marginBottom: 2,
+    includeFontPadding: false,
   },
   macroCardLabel: {
     fontSize: 12,
     fontWeight: '600',
     color: '#6E6E73',
+    includeFontPadding: false,
   },
   healthScoreCard: {
     backgroundColor: '#FFFFFF',

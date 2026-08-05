@@ -5,7 +5,8 @@ import {
   Salad,
   Sparkles,
 } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 
 import {
   CardShadow,
@@ -71,7 +72,9 @@ export function MealCard({ meal, onPress, onRetake }: MealCardProps) {
       )}
 
       <View style={styles.middle}>
-        <Text style={styles.slot}>{meal.name || meal.slot || 'Logged Meal'}</Text>
+        <Text style={styles.slot} numberOfLines={1}>
+          {meal.name || meal.slot || 'Logged Meal'}
+        </Text>
         <Text style={styles.name} numberOfLines={1}>
           {meal.errorReason ? 'Failed to process' : 'AI Nutrition'}
         </Text>
@@ -192,6 +195,8 @@ const styles = StyleSheet.create({
   },
   middle: {
     flex: 1,
+    minWidth: 0,
+    flexShrink: 1,
     gap: 3,
   },
   slot: {
@@ -199,21 +204,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Palette.text,
     letterSpacing: -0.3,
+    includeFontPadding: false,
   },
   name: {
     fontSize: 15,
     fontWeight: '400',
     color: '#7B7B7B',
+    includeFontPadding: false,
   },
   macroRow: {
     flexDirection: 'row',
-    gap: 12,
+    flexWrap: 'wrap',
+    gap: 10,
     marginTop: 5,
   },
   macroItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
   dot: {
     width: 7,
@@ -224,9 +232,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: Palette.textSecondary,
+    includeFontPadding: false,
   },
   right: {
     alignItems: 'flex-end',
+    flexShrink: 0,
     gap: 2,
   },
   kcalRow: {
@@ -238,6 +248,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0B5E43',
     fontFamily: NumeralFont,
+    includeFontPadding: false,
   },
   kcalUnit: {
     fontSize: 14,

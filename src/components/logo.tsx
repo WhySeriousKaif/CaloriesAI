@@ -9,11 +9,11 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
  */
 
 const lockup = {
-  light: require('@/assets/images/logo-light.png'),
-  dark: require('@/assets/images/logo-dark.png'),
+  light: require('../../assets/images/logo-light.png'),
+  dark: require('../../assets/images/logo-dark.png'),
 } as const;
 
-const mark = require('@/assets/images/logo-mark.png');
+const mark = require('../../assets/images/logo-mark.png');
 
 /** Intrinsic width / height, so a caller only ever picks one dimension. */
 const Ratio = {

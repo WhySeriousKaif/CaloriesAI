@@ -30,7 +30,7 @@ export function MacroCard({ macro, value, target, loading }: MacroCardProps) {
   const { color, tint, label } = Macro[macro];
   const Icon = ICONS[macro];
 
-  const progress = target && target > 0 ? Math.min(1, value / target) : 0;
+  const progress = target && target > 0 ? Math.min(1, Math.max(0, value / target)) : 0;
 
   return (
     <View style={styles.card}>
@@ -38,7 +38,9 @@ export function MacroCard({ macro, value, target, loading }: MacroCardProps) {
         <View style={[styles.iconCircle, { backgroundColor: tint }]}>
           <Icon size={17} color={color} strokeWidth={2.2} />
         </View>
-        <Text style={styles.label}>{label}</Text>
+        <Text style={styles.label} numberOfLines={1}>
+          {label}
+        </Text>
       </View>
 
       <View style={styles.valueRow}>
@@ -46,8 +48,12 @@ export function MacroCard({ macro, value, target, loading }: MacroCardProps) {
           <Skeleton style={{ width: 45, height: 18, borderRadius: 6, marginVertical: 2 }} />
         ) : (
           <>
-            <Text style={styles.value}>{value}</Text>
-            <Text style={styles.target}>{target ? ` / ${target}g` : ' g'}</Text>
+            <Text style={styles.value} numberOfLines={1}>
+              {value}
+            </Text>
+            <Text style={styles.target} numberOfLines={1}>
+              {target ? ` / ${target}g` : ' g'}
+            </Text>
           </>
         )}
       </View>
@@ -56,7 +62,7 @@ export function MacroCard({ macro, value, target, loading }: MacroCardProps) {
         <View
           style={[
             styles.fill,
-            { backgroundColor: color, width: `${progress * 100}%` },
+            { backgroundColor: color, width: `${Math.min(100, Math.max(0, progress * 100))}%` },
           ]}
         />
       </View>
@@ -69,7 +75,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Palette.card,
     borderRadius: 18,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 10,
     gap: 4,
     ...CardShadow,
@@ -90,11 +96,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#7A7A7A',
+    flexShrink: 1,
   },
   valueRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     marginVertical: 1,
+    flexShrink: 1,
   },
   value: {
     fontSize: 17,
@@ -102,11 +110,13 @@ const styles = StyleSheet.create({
     color: Palette.text,
     letterSpacing: -0.4,
     fontFamily: NumeralFont,
+    includeFontPadding: false,
   },
   target: {
     fontSize: 12,
     fontWeight: '500',
     color: '#7A7A7A',
+    includeFontPadding: false,
   },
   track: {
     height: 4,

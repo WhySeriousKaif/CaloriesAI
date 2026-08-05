@@ -8,13 +8,13 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 import {
   Activity,
   AlertTriangle,
@@ -63,7 +63,13 @@ function InsightIcon({ icon }: { icon: string }) {
 }
 
 import { LoaderTwo } from '@/components/ui/loader';
-import { CardShadow, Layout, NumeralFont, Palette, Radius } from '@/constants/design';
+import {
+  CardShadow,
+  Layout,
+  NumeralFont,
+  Palette,
+  Radius,
+} from '@/constants/design';
 
 type AnalyzedMeal = {
   id?: string;

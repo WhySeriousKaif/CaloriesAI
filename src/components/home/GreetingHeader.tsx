@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useUser } from '@clerk/expo';
 import { Flame } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 
 import { Logo } from '@/components/logo';
 import { Radius } from '@/constants/design';
@@ -54,17 +55,19 @@ export function GreetingHeader() {
         </Pressable>
       </View>
 
-      <Text style={styles.greeting}>
+      <Text style={styles.greeting} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
         {greeting}, {name}!
       </Text>
-      <Text style={styles.subtitle}>Let&apos;s make today a healthy one.</Text>
+      <Text style={styles.subtitle} numberOfLines={1}>
+        Let&apos;s make today a healthy one.
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 16,
   },
@@ -92,12 +95,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#991B1B',
+    includeFontPadding: false,
   },
   greeting: {
     fontSize: 24,
     fontWeight: '800',
     color: '#111827',
     letterSpacing: -0.5,
+    includeFontPadding: false,
   },
   wave: {
     fontSize: 22,
@@ -105,7 +110,8 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#144934ff',
+    color: '#144934',
     marginTop: 2,
+    includeFontPadding: false,
   },
 });

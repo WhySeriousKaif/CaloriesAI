@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { ScrollView, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 
 import { NumeralFont, Palette, Radius } from '@/constants/design';
 
@@ -61,7 +62,7 @@ export function DateStrip({ days, selectedKey, onSelect, loggedDateKeys }: DateS
     const selectedIndex = days.findIndex((d) => d.key === selectedKey);
     const targetIndex = selectedIndex >= 0 ? selectedIndex : days.findIndex((d) => d.isToday);
     if (targetIndex >= 0 && scrollViewRef.current) {
-      const itemWidth = 56;
+      const itemWidth = 58;
       const scrollX = Math.max(0, targetIndex * itemWidth - 160);
       setTimeout(() => {
         scrollViewRef.current?.scrollTo({ x: scrollX, animated: false });
@@ -80,6 +81,18 @@ export function DateStrip({ days, selectedKey, onSelect, loggedDateKeys }: DateS
         const selected = day.key === selectedKey;
         const hasMeal = loggedDateKeys ? loggedDateKeys.has(day.key) : false;
 
+        const weekdayColor = selected
+          ? '#FFFFFF'
+          : day.isFuture
+          ? Palette.textTertiary
+          : Palette.textSecondary;
+
+        const dayColor = selected
+          ? '#FFFFFF'
+          : day.isFuture
+          ? Palette.textTertiary
+          : Palette.text;
+
         return (
           <Pressable
             key={day.key}
@@ -93,20 +106,10 @@ export function DateStrip({ days, selectedKey, onSelect, loggedDateKeys }: DateS
               selected && styles.cellSelected,
               pressed && !selected && styles.pressed,
             ]}>
-            <Text
-              style={[
-                styles.weekday,
-                selected && styles.weekdaySelected,
-                day.isFuture && styles.dimmed,
-              ]}>
+            <Text style={[styles.weekday, { color: weekdayColor }]} numberOfLines={1}>
               {day.weekday}
             </Text>
-            <Text
-              style={[
-                styles.day,
-                selected && styles.daySelected,
-                day.isFuture && styles.dimmed,
-              ]}>
+            <Text style={[styles.day, { color: dayColor }]} numberOfLines={1}>
               {day.dayOfMonth}
             </Text>
             <View
@@ -130,17 +133,15 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 0,
-    width: '100%',
+    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
   },
   cell: {
-    flex: 1,
-    minWidth: 42,
-    maxWidth: 52,
+    minWidth: 50,
+    paddingHorizontal: 8,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 10,
     borderRadius: 18,
     gap: 4,
@@ -153,8 +154,10 @@ const styles = StyleSheet.create({
   },
   weekday: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
     color: Palette.textSecondary,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   weekdaySelected: {
     color: '#FFFFFF',
@@ -164,6 +167,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Palette.text,
     fontFamily: NumeralFont,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   daySelected: {
     color: '#FFFFFF',

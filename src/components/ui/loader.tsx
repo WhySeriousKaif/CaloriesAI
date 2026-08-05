@@ -215,7 +215,7 @@ export function AppLoaderScreen({ text = 'Loading...' }: { text?: string }) {
       <View style={styles.brandContainer}>
         <View style={styles.logoBadge}>
           <Image
-            source={require('@/assets/images/logo-mark.png')}
+            source={require('../../../assets/images/logo-mark.png')}
             style={styles.logoImage}
             contentFit="contain"
           />

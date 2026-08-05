@@ -7,11 +7,11 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as AuthSession from 'expo-auth-session';
@@ -147,7 +147,7 @@ export default function SignInScreen() {
 
       <View style={styles.body}>
         <Image
-          source={require('@/assets/images/logo-lockup-horizontal.png')}
+          source={require('../../../assets/images/logo-lockup-horizontal.png')}
           style={styles.logo}
           contentFit="contain"
           alt="Calora"

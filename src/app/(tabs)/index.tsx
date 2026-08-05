@@ -3,16 +3,27 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Camera, Flame, Sparkles, Utensils, X } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CalorieRingCard } from '@/components/home/CalorieRingCard';
-import { DateStrip, formatLocalDateKey, weekAround } from '@/components/home/DateStrip';
+import {
+  DateStrip,
+  formatLocalDateKey,
+  weekAround,
+} from '@/components/home/DateStrip';
 import { GreetingHeader } from '@/components/home/GreetingHeader';
 import { MacroCard } from '@/components/home/MacroCard';
 import { MealCard, SkeletonMealCard } from '@/components/home/MealCard';
 import { MealDetailModal } from '@/components/home/MealDetailModal';
-import { Layout, Macro, NumeralFont, Palette, Radius } from '@/constants/design';
+import {
+  Layout,
+  Macro,
+  NumeralFont,
+  Palette,
+  Radius,
+} from '@/constants/design';
 import { BottomTabInset, MaxContentWidth } from '@/constants/theme';
 import { MealItem, useMeals } from '@/hooks/use-meals';
 import { useProfile } from '@/hooks/use-profile';

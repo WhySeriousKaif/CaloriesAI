@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 
 interface OptionCardProps {
   title: string;
@@ -98,12 +99,15 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
+    minWidth: 0,
+    flexShrink: 1,
   },
   title: {
     fontSize: 16,
     fontWeight: '700',
     color: '#0A3527',
     marginBottom: 2,
+    includeFontPadding: false,
   },
   selectedTitle: {
     color: '#073828',
@@ -112,6 +116,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: '#4B5563', // High contrast readable gray
+    includeFontPadding: false,
   },
   selectedDescription: {
     color: '#047857',

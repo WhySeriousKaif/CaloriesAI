@@ -14,13 +14,13 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -240,7 +240,7 @@ export default function HistoryScreen() {
                     )}
 
                     <View style={styles.middle}>
-                      <Text style={styles.mealTitle}>
+                      <Text style={styles.mealTitle} numberOfLines={1}>
                         {meal.name || 'Logged Meal'}
                       </Text>
                       <View style={styles.macroRow}>
@@ -448,16 +448,20 @@ const styles = StyleSheet.create({
   },
   middle: {
     flex: 1,
+    minWidth: 0,
+    flexShrink: 1,
     gap: 4,
   },
   mealTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: Palette.text,
+    includeFontPadding: false,
   },
   macroRow: {
     flexDirection: 'row',
-    gap: 10,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   macroBadge: {
     flexDirection: 'row',
@@ -473,15 +477,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: Palette.textSecondary,
+    includeFontPadding: false,
   },
   rightCol: {
     alignItems: 'flex-end',
+    flexShrink: 0,
   },
   kcalVal: {
     fontSize: 20,
     fontWeight: '800',
     color: Palette.brand,
     fontFamily: NumeralFont,
+    includeFontPadding: false,
   },
   kcalLbl: {
     fontSize: 11,

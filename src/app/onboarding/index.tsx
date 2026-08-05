@@ -28,20 +28,26 @@ import {
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LoaderFive, LoaderOne } from '@/components/ui/loader';
 import { TypewriterEffect } from '@/components/ui/typewriter-effect';
-import { ClipboardHeader } from '@/components/onboarding/illustrations/ClipboardHeader';
+import {
+  ClipboardHeader,
+} from '@/components/onboarding/illustrations/ClipboardHeader';
 import { GoalHeader } from '@/components/onboarding/illustrations/GoalHeader';
-import { HeightHeader } from '@/components/onboarding/illustrations/HeightHeader';
-import { WeightHeader } from '@/components/onboarding/illustrations/WeightHeader';
+import {
+  HeightHeader,
+} from '@/components/onboarding/illustrations/HeightHeader';
+import {
+  WeightHeader,
+} from '@/components/onboarding/illustrations/WeightHeader';
 import { OnboardingHeader } from '@/components/onboarding/OnboardingHeader';
 import { OptionCard } from '@/components/onboarding/OptionCard';
 import { RulerPicker } from '@/components/onboarding/RulerPicker';
