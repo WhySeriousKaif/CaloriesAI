@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/expo';
+import { getApiUrl } from '@/lib/api-config';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -387,7 +388,7 @@ export default function CameraScreen() {
       const token = await getToken();
       if (!token) throw new Error('Unauthenticated session token');
 
-      const response = await fetch('/api/meals', {
+      const response = await fetch(getApiUrl('/api/meals'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -419,7 +420,7 @@ export default function CameraScreen() {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         attempts++;
 
-        const checkRes = await fetch('/api/meals', {
+        const checkRes = await fetch(getApiUrl('/api/meals'), {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (checkRes.ok) {

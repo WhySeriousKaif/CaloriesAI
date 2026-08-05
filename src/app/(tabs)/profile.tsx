@@ -1,4 +1,5 @@
 import { useAuth, useUser } from '@clerk/expo';
+import { getApiUrl } from '@/lib/api-config';
 import * as Sentry from '@sentry/react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -132,7 +133,7 @@ export default function ProfileScreen() {
       const token = await getToken();
       if (!token) throw new Error('Unauthorized');
 
-      const response = await fetch('/api/profile', {
+      const response = await fetch(getApiUrl('/api/profile'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -250,7 +251,7 @@ export default function ProfileScreen() {
             try {
               const token = await getToken();
               if (token) {
-                await fetch('/api/profile', {
+                await fetch(getApiUrl('/api/profile'), {
                   method: 'DELETE',
                   headers: { Authorization: `Bearer ${token}` },
                 });

@@ -14,5 +14,6 @@ android/app/build/
 android/build/
 ios/Pods/
 ios/build/
-*.png
-*.jpg
+# Ignore root screenshot files if any, but keep assets
+/*.png
+/*.jpg

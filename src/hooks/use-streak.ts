@@ -1,4 +1,5 @@
 import { getCache, setCache } from '@/lib/cache';
+import { getApiUrl } from '@/lib/api-config';
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -41,7 +42,7 @@ export function useStreak() {
       const token = await getToken();
       if (!token) return;
 
-      const res = await fetch('/api/streak', {
+      const res = await fetch(getApiUrl('/api/streak'), {
         headers: { Authorization: `Bearer ${token}` },
       }).catch((err) => {
         console.warn('[use-streak] Network error:', err);

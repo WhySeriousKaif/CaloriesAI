@@ -7,6 +7,7 @@ import {
   readPendingOnboarding,
 } from '@/lib/onboarding-storage';
 import { useProfile } from '@/hooks/use-profile';
+import { getApiUrl } from '@/lib/api-config';
 
 /**
  * Flushes the parked onboarding answers to `POST /api/profile` once Clerk has a
@@ -41,7 +42,7 @@ export function ProfileSync() {
           return;
         }
 
-        const response = await fetch('/api/profile', {
+        const response = await fetch(getApiUrl('/api/profile'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

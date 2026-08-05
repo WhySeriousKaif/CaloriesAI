@@ -2,6 +2,8 @@ import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getCache, setCache } from '@/lib/cache';
+import { getApiUrl } from '@/lib/api-config';
+
 
 /**
  * The `users` row as `GET /api/profile` returns it. Numeric columns arrive as
@@ -101,7 +103,7 @@ export function useProfile() {
         return;
       }
 
-      const response = await fetch('/api/profile', {
+      const response = await fetch(getApiUrl('/api/profile'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!isCurrent()) return;
@@ -135,7 +137,14 @@ export function useProfile() {
     } catch (err) {
       if (!isCurrent()) return;
       console.warn('[use-profile] Failed to load profile:', err);
-      setError("Couldn't reach Calora. Check your connection.");
+      // Paint from cache if available so network failure doesn't lock out valid user
+      const cached = userId ? await getCache<Profile>(`${CACHE_KEY}_${userId}`) : null;
+      if (cached) {
+        setProfile(cached);
+        setError(null);
+      } else {
+        setError("Couldn't reach Calora. Check your connection.");
+      }
     } finally {
       if (isCurrent()) setLoading(false);
     }

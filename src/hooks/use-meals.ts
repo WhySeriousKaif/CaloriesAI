@@ -1,4 +1,6 @@
 import { getCache, setCache } from '@/lib/cache';
+import { getApiUrl } from '@/lib/api-config';
+
 import { useAuth } from '@clerk/expo';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -49,8 +51,8 @@ export function useMeals(date?: string) {
       const token = await getToken();
       if (!token) return;
 
-      const url = date ? `/api/meals?date=${encodeURIComponent(date)}` : '/api/meals';
-      const res = await fetch(url, {
+      const path = date ? `/api/meals?date=${encodeURIComponent(date)}` : '/api/meals';
+      const res = await fetch(getApiUrl(path), {
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => null);
 
@@ -90,7 +92,7 @@ export function useMeals(date?: string) {
         const token = await getToken();
         if (!token) throw new Error('Unauthorized');
 
-        const res = await fetch('/api/meals', {
+        const res = await fetch(getApiUrl('/api/meals'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
